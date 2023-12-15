@@ -258,8 +258,8 @@ export class Position {
       pool: this.pool,
       tickLower: this.tickLower,
       tickUpper: this.tickUpper,
-      amount0: this.amount0.multiply(percentage).toExact().split('.')[0],
-      amount1: this.amount1.multiply(percentage).toExact().split('.')[0],
+      amount0: BigInt(this.amount0.multiply(percentage).toExact().split('.')[0]) * this.amount0._decimalScale,
+      amount1: BigInt(this.amount1.multiply(percentage).toExact().split('.')[0]) * this.amount1._decimalScale,
       useFullPrecision: true,
     })
 
