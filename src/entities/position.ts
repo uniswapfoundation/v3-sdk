@@ -297,25 +297,20 @@ export class Position {
     signer: ethers.Signer
     provider: ethers.providers.Provider
     percentage: Fraction
-    options: RemoveLiquidityOptions
+    options: Omit<RemoveLiquidityOptions, 'liquidityPercentage' | 'collectOptions'>
     transactionOverrides?: TransactionOverrides
   }): Promise<ethers.providers.TransactionResponse> {
-    const toBeDecreasedByPosition = Position.fromAmounts({
-      pool: this.pool,
-      tickLower: this.tickLower,
-      tickUpper: this.tickUpper,
-      amount0: this.amount0.multiply(percentage).toExact().split('.')[0],
-      amount1: this.amount1.multiply(percentage).toExact().split('.')[0],
-      useFullPrecision: true,
-    })
+    const removeOptions: RemoveLiquidityOptions = {
+      ...options,
+      liquidityPercentage: new Percent(percentage.numerator, percentage.denominator),
+      collectOptions: {
+        recipient: await signer.getAddress(),
+        expectedCurrencyOwed0: CurrencyAmount.fromFractionalAmount(this.pool.token0, this.tokensOwed0 || 0n, 1),
+        expectedCurrencyOwed1: CurrencyAmount.fromFractionalAmount(this.pool.token0, this.tokensOwed1 || 0n, 1),
+      },
+    }
 
-    return NonfungiblePositionManager.removeOnChain(
-      signer,
-      provider,
-      toBeDecreasedByPosition,
-      options,
-      transactionOverrides
-    )
+    return NonfungiblePositionManager.removeOnChain(signer, provider, this, removeOptions, transactionOverrides)
   }
 
   public async collectFeesOnChain({
@@ -394,6 +389,7 @@ export class Position {
         this._token0Amount = CurrencyAmount.fromRawAmount(this.pool.token0, ZERO)
       }
     }
+
     return this._token0Amount
   }
 
