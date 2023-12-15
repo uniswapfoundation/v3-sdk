@@ -481,7 +481,7 @@ export class Pool {
 
     let connectedSigner: ethers.Signer | undefined
     if (signer) {
-      let connectedSigner = signer
+      connectedSigner = signer
       try {
         connectedSigner = signer.connect(this._provider)
       } catch {}
