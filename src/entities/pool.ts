@@ -443,7 +443,10 @@ export class Pool {
     transactionOverrides?: TransactionOverrides,
     factoryAddress?: string
   ): Promise<ethers.providers.TransactionResponse> {
-    const signer = _signer.connect(provider)
+    let signer = _signer
+    try {
+      signer = _signer.connect(provider)
+    } catch {}
 
     let factory: string
     if (factoryAddress) {
@@ -476,7 +479,15 @@ export class Pool {
   public async rpcContract(poolAddress?: string, signer?: ethers.Signer): Promise<ethers.Contract> {
     invariant(this._provider, 'provider not initialized')
 
-    const provider = signer ? signer.connect(this._provider) : this._provider
+    let connectedSigner: ethers.Signer | undefined
+    if (signer) {
+      connectedSigner = signer
+      try {
+        connectedSigner = signer.connect(this._provider)
+      } catch {}
+    }
+
+    const provider = connectedSigner ? connectedSigner : this._provider
     return new ethers.Contract(
       poolAddress || Pool.getAddress(this.token0, this.token1, this.fee),
       poolAbi.abi,
