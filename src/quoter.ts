@@ -1,4 +1,4 @@
-import { Interface, defaultAbiCoder} from '@ethersproject/abi'
+import { Interface, defaultAbiCoder } from '@ethersproject/abi'
 import { BigNumber } from '@ethersproject/bignumber'
 import { Provider } from '@ethersproject/abstract-provider'
 import { BigintIsh, Currency, CurrencyAmount, TradeType, CHAIN_TO_ADDRESSES_MAP, SUPPORTED_CHAINS, SupportedChainsType, ChainId, Token } from '@uniswap/sdk-core'
@@ -64,12 +64,17 @@ export abstract class SwapQuoter {
    * @param provider a provider to make onchain calls
    * @returns The quoted output amount of the swap
    */
-  public static async quoteExactInputSingle<TInput extends Token, TOutput extends Token>(
-    amountIn: CurrencyAmount<TInput>,
-    tokenOut: TOutput,
-    poolFee: FeeAmount,
+  public static async quoteExactInputSingle<TInput extends Token, TOutput extends Token>({
+    amountIn,
+    tokenOut,
+    poolFee,
+    provider
+  }: {
+    amountIn: CurrencyAmount<TInput>
+    tokenOut: TOutput
+    poolFee: FeeAmount
     provider: Provider
-  ): Promise<CurrencyAmount<TOutput>> {
+  }): Promise<CurrencyAmount<TOutput>> {
 
     invariant(amountIn.currency.chainId === tokenOut.chainId, 'Tokens need to be on same chain')
 
@@ -109,7 +114,7 @@ export abstract class SwapQuoter {
     const decodedEthersValue: BigNumber = defaultAbiCoder.decode(['uint256'], quoteCallReturnValue)[0]
     const bigintQuoterValue = decodedEthersValue.toBigInt()
 
-    invariant(typeof bigintQuoterValue === "bigint" , 'Could not decode quoter response')
+    invariant(typeof bigintQuoterValue === "bigint", 'Could not decode quoter response')
 
     return CurrencyAmount.fromRawAmount(tokenOut, bigintQuoterValue)
   }
@@ -122,12 +127,17 @@ export abstract class SwapQuoter {
    * @param provider to make onchain calls
    * @returns The inputamount needed for the swap
    */
-  public static async quoteExactOutputSingle<TInput extends Token, TOutput extends Token>(
+  public static async quoteExactOutputSingle<TInput extends Token, TOutput extends Token>({
+    tokenIn,
+    amountOut,
+    poolFee,
+    provider
+  }: {
     tokenIn: TInput,
     amountOut: CurrencyAmount<TOutput>,
     poolFee: FeeAmount,
     provider: Provider
-  ): Promise<CurrencyAmount<TInput>> {
+  }): Promise<CurrencyAmount<TInput>> {
 
     invariant(amountOut.currency.chainId === tokenIn.chainId, 'Tokens need to be on same chain')
 
@@ -168,7 +178,7 @@ export abstract class SwapQuoter {
     const decodedEthersValue: BigNumber = defaultAbiCoder.decode(['uint256'], quoteCallReturnValue)[0]
     const bigintQuoterValue = decodedEthersValue.toBigInt()
 
-    invariant(typeof bigintQuoterValue === "bigint" , 'Could not decode quoter response')
+    invariant(typeof bigintQuoterValue === "bigint", 'Could not decode quoter response')
 
     return CurrencyAmount.fromRawAmount(tokenIn, bigintQuoterValue)
   }
@@ -244,12 +254,17 @@ export abstract class SwapQuoter {
    * @param tradeType The trade type, either exact input or exact output
    * @returns The decoded result of the Quoter call
    */
-  public static async callQuoter<TInput extends Currency, TOutput extends Currency>(
+  public static async callQuoter<TInput extends Currency, TOutput extends Currency>({
+    route,
+    amount,
+    tradeType,
+    provider
+  }: {
     route: Route<TInput, TOutput>,
     amount: CurrencyAmount<TInput | TOutput>,
     tradeType: TradeType,
     provider: Provider
-  ): Promise<CurrencyAmount<TInput | TOutput>> {
+  }): Promise<CurrencyAmount<TInput | TOutput>> {
     const chainId = amount.currency.chainId
     const chain = SUPPORTED_CHAINS[chainId]
 
@@ -262,8 +277,8 @@ export abstract class SwapQuoter {
     invariant(contractAddresses)
 
     const methodParameters = this.quoteCallParameters(
-      route, 
-      amount, 
+      route,
+      amount,
       tradeType,
       {
         useQuoterV2: true
@@ -277,7 +292,7 @@ export abstract class SwapQuoter {
     const decodedEthersValue: BigNumber = defaultAbiCoder.decode(['uint256'], quoteCallReturnValue)[0]
     const bigintQuoterValue = decodedEthersValue.toBigInt()
 
-    invariant(typeof bigintQuoterValue === "bigint" , 'Could not decode quoter response')
+    invariant(typeof bigintQuoterValue === "bigint", 'Could not decode quoter response')
 
     if (tradeType === TradeType.EXACT_INPUT) {
       const outputCurrency = route.output
