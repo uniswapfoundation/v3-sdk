@@ -292,12 +292,12 @@ export abstract class SwapRouter {
       const maxAmountIn = firstTrade.inputAmount.quotientBigInt
 
       if (allowance < maxAmountIn) {
-        await approveTokenTransfer(
-          routerAddress,
-          tokenIn.address,
-          maxAmountIn,
+        await approveTokenTransfer({
+          contractAddress: routerAddress,
+          tokenAddress: tokenIn.address,
+          amount: maxAmountIn,
           signer
-        )
+        })
       }
     }
 

@@ -3,7 +3,7 @@ import { Provider, TransactionReceipt, TransactionResponse } from '@ethersprojec
 import { Contract } from '@ethersproject/contracts'
 import { BigintIsh } from '@uniswap/sdk-core'
 import { ERC20_ABI } from '../constants'
-import { BigNumber} from 'ethers'
+import { BigNumber } from 'ethers'
 
 /**
  * Approves an address to transfer ERC20 Tokens on behalf of a Signer
@@ -12,22 +12,27 @@ import { BigNumber} from 'ethers'
  * @param amount The amount of the Token to be approved for transfer
  * @param signer The signer that approves the transfer on his behalf
  */
-export async function approveTokenTransfer(
+export async function approveTokenTransfer({
+    contractAddress,
+    tokenAddress,
+    amount,
+    signer
+}: {
     contractAddress: string,
     tokenAddress: string,
     amount: BigintIsh,
     signer: Signer
-): Promise<TransactionReceipt> {
+}): Promise<TransactionReceipt> {
     const tokenContract = new Contract(tokenAddress, ERC20_ABI, signer)
-   
-    if (typeof amount !== "string") {
+
+    if (typeof amount !== 'string') {
         if (BigNumber.isBigNumber(amount)) {
             amount = amount.toString()
         } else {
             amount = amount.toString(10)
         }
     }
-    const tx: TransactionResponse = await tokenContract["approve"](contractAddress, amount)
+    const tx: TransactionResponse = await tokenContract['approve'](contractAddress, amount)
     return await tx.wait()
 }
 
@@ -46,6 +51,6 @@ export async function getAllowance(
     provider: Provider
 ): Promise<bigint> {
     const tokenContract = new Contract(tokenAddress, ERC20_ABI, provider)
-    const allowance = await tokenContract["allowance"](signerAddress, contractAddress)
+    const allowance = await tokenContract['allowance'](signerAddress, contractAddress)
     return BigInt(allowance.toString(10))
 }
