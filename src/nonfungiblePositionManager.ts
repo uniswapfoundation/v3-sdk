@@ -207,11 +207,18 @@ export abstract class NonfungiblePositionManager {
     pool: Pool,
     transactionOverrides?: TransactionOverrides
   ): Promise<ethers.providers.TransactionResponse> {
-    const signer = _signer.connect(provider)
+    let signer = _signer
+    try {
+      signer = _signer.connect(provider)
+    } catch {}
 
     const chainId = (await provider.getNetwork()).chainId
 
-    const contract = new ethers.Contract(NONFUNGIBLE_POSITION_MANAGER_ADDRESSES[chainId], INonfungiblePositionManager.abi, signer)
+    const contract = new ethers.Contract(
+      NONFUNGIBLE_POSITION_MANAGER_ADDRESSES[chainId],
+      INonfungiblePositionManager.abi,
+      signer
+    )
 
     const response = contract.createAndInitializePoolIfNecessary(
       pool.token0.address,
@@ -250,7 +257,10 @@ export abstract class NonfungiblePositionManager {
     options: MintOptions,
     transactionOverrides?: TransactionOverrides
   ): Promise<ethers.providers.TransactionResponse> {
-    const signer = _signer.connect(provider)
+    let signer = _signer
+    try {
+      signer = _signer.connect(provider)
+    } catch {}
 
     const chainId = (await provider.getNetwork()).chainId
 
@@ -287,7 +297,10 @@ export abstract class NonfungiblePositionManager {
     options: IncreaseOptions,
     transactionOverrides?: TransactionOverrides
   ): Promise<ethers.providers.TransactionResponse> {
-    const signer = _signer.connect(provider)
+    let signer = _signer
+    try {
+      signer = _signer.connect(provider)
+    } catch {}
 
     const chainId = (await provider.getNetwork()).chainId
 
@@ -471,7 +484,10 @@ export abstract class NonfungiblePositionManager {
     options: CollectOptions,
     transactionOverrides?: TransactionOverrides
   ): Promise<ethers.providers.TransactionResponse> {
-    const signer = _signer.connect(provider)
+    let signer = _signer
+    try {
+      signer = _signer.connect(provider)
+    } catch {}
 
     const chainId = (await provider.getNetwork()).chainId
 
@@ -517,7 +533,10 @@ export abstract class NonfungiblePositionManager {
     options: RemoveLiquidityOptions,
     transactionOverrides?: TransactionOverrides
   ): Promise<ethers.providers.TransactionResponse> {
-    const signer = _signer.connect(provider)
+    let signer = _signer
+    try {
+      signer = _signer.connect(provider)
+    } catch {}
 
     const chainId = (await provider.getNetwork()).chainId
 
@@ -633,7 +652,10 @@ export abstract class NonfungiblePositionManager {
     options: SafeTransferOptions,
     transactionOverrides?: TransactionOverrides
   ): Promise<ethers.providers.TransactionResponse> {
-    const signer = _signer.connect(provider)
+    let signer = _signer
+    try {
+      signer = _signer.connect(provider)
+    } catch {}
 
     const chainId = (await provider.getNetwork()).chainId
 
@@ -685,7 +707,11 @@ export abstract class NonfungiblePositionManager {
   public static async tokenURI(provider: ethers.providers.Provider, positionId: BigintIsh): Promise<string> {
     const chainId = (await provider.getNetwork()).chainId
 
-    const contract = new ethers.Contract(NONFUNGIBLE_POSITION_MANAGER_ADDRESSES[chainId], INonfungiblePositionManager.abi, provider)
+    const contract = new ethers.Contract(
+      NONFUNGIBLE_POSITION_MANAGER_ADDRESSES[chainId],
+      INonfungiblePositionManager.abi,
+      provider
+    )
 
     return await contract.tokenURI(ethers.BigNumber.from(bigIntFromBigintIsh(positionId).toString(10)))
   }
@@ -700,7 +726,11 @@ export abstract class NonfungiblePositionManager {
   public static async baseURI(provider: ethers.providers.Provider): Promise<string> {
     const chainId = (await provider.getNetwork()).chainId
 
-    const contract = new ethers.Contract(NONFUNGIBLE_POSITION_MANAGER_ADDRESSES[chainId], INonfungiblePositionManager.abi, provider)
+    const contract = new ethers.Contract(
+      NONFUNGIBLE_POSITION_MANAGER_ADDRESSES[chainId],
+      INonfungiblePositionManager.abi,
+      provider
+    )
 
     return await contract.baseURI()
   }
