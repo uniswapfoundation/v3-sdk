@@ -67,10 +67,13 @@ export class Position {
    * @param positionId The position id to fetch.
    * @returns Instance of Position.
    */
-  public static async fetchWithPositionId(
+  public static async fetchWithPositionId({
+    provider,
+    positionId
+  }: {
     provider: ethers.providers.Provider,
     positionId: BigintIsh
-  ): Promise<Position> {
+  }): Promise<Position> {
     const chainId = (await provider.getNetwork()).chainId
 
     const contract = new ethers.Contract(
@@ -84,12 +87,12 @@ export class Position {
     const token1Contract = new ethers.Contract(position.token1, ERC20_ABI, provider)
 
     return new Position({
-      pool: await Pool.initFromChain(
+      pool: await Pool.initFromChain({
         provider,
-        new Token(chainId, position.token0, await token0Contract.decimals()),
-        new Token(chainId, position.token1, await token1Contract.decimals()),
-        position.fee
-      ),
+        tokenA: new Token(chainId, position.token0, await token0Contract.decimals()),
+        tokenB: new Token(chainId, position.token1, await token1Contract.decimals()),
+        fee: position.fee
+      }),
       liquidity: position.liquidity,
       tickLower: position.tickLower,
       tickUpper: position.tickUpper,
@@ -110,7 +113,13 @@ export class Position {
    * @param address The address to fetch position count for.
    * @returns The number of positions of the given address.
    */
-  public static async getPositionCount(provider: ethers.providers.Provider, address: string): Promise<bigint> {
+  public static async getPositionCount({
+    provider,
+    address
+  }: {
+    provider: ethers.providers.Provider,
+    address: string
+  }): Promise<bigint> {
     const chainId = (await provider.getNetwork()).chainId
 
     const contract = new ethers.Contract(
@@ -133,11 +142,15 @@ export class Position {
    * @param index The index of the position for the given address to fetch.
    * @returns The initialized position.
    */
-  public static async getPositionForAddressAndIndex(
+  public static async getPositionForAddressAndIndex({
+    provider,
+    address,
+    index
+  }: {
     provider: ethers.providers.Provider,
     address: string,
     index: BigintIsh
-  ): Promise<Position> {
+  }): Promise<Position> {
     const chainId = (await provider.getNetwork()).chainId
     const contract = new ethers.Contract(
       NONFUNGIBLE_POSITION_MANAGER_ADDRESSES[chainId],
@@ -150,7 +163,7 @@ export class Position {
       ethers.BigNumber.from(bigIntFromBigintIsh(index).toString(10))
     )
 
-    return await Position.fetchWithPositionId(provider, BigInt(positionId.toString(10)))
+    return await Position.fetchWithPositionId({provider, positionId: BigInt(positionId.toString(10))})
   }
 
   /**
@@ -171,7 +184,7 @@ export class Position {
     provider: ethers.providers.Provider,
     address: string
   ): Promise<Position[]> {
-    const balance = await Position.getPositionCount(provider, address)
+    const balance = await Position.getPositionCount({provider, address})
 
     const chainId = (await provider.getNetwork()).chainId
     const contract = new ethers.Contract(
@@ -186,7 +199,7 @@ export class Position {
     }
     const positionIds = (await Promise.all(positionIdsPromises)).map((id) => BigInt(id.toString(10)))
 
-    return await Promise.all(positionIds.map((id) => Position.fetchWithPositionId(provider, id)))
+    return await Promise.all(positionIds.map((id) => Position.fetchWithPositionId({provider, positionId: id})))
   }
 
   /**
