@@ -24,6 +24,7 @@ import { bigIntFromBigintIsh } from '../utils/bigintIsh'
 import {
   CollectOptions,
   IncreaseOptions,
+  MintOptions,
   NonfungiblePositionManager,
   RemoveLiquidityOptions,
 } from '../nonfungiblePositionManager'
@@ -69,9 +70,9 @@ export class Position {
    */
   public static async fetchWithPositionId({
     provider,
-    positionId
+    positionId,
   }: {
-    provider: ethers.providers.Provider,
+    provider: ethers.providers.Provider
     positionId: BigintIsh
   }): Promise<Position> {
     const chainId = (await provider.getNetwork()).chainId
@@ -91,7 +92,7 @@ export class Position {
         provider,
         tokenA: new Token(chainId, position.token0, await token0Contract.decimals()),
         tokenB: new Token(chainId, position.token1, await token1Contract.decimals()),
-        fee: position.fee
+        fee: position.fee,
       }),
       liquidity: position.liquidity,
       tickLower: position.tickLower,
@@ -115,9 +116,9 @@ export class Position {
    */
   public static async getPositionCount({
     provider,
-    address
+    address,
   }: {
-    provider: ethers.providers.Provider,
+    provider: ethers.providers.Provider
     address: string
   }): Promise<bigint> {
     const chainId = (await provider.getNetwork()).chainId
@@ -145,10 +146,10 @@ export class Position {
   public static async getPositionForAddressAndIndex({
     provider,
     address,
-    index
+    index,
   }: {
-    provider: ethers.providers.Provider,
-    address: string,
+    provider: ethers.providers.Provider
+    address: string
     index: BigintIsh
   }): Promise<Position> {
     const chainId = (await provider.getNetwork()).chainId
@@ -163,7 +164,7 @@ export class Position {
       ethers.BigNumber.from(bigIntFromBigintIsh(index).toString(10))
     )
 
-    return await Position.fetchWithPositionId({provider, positionId: BigInt(positionId.toString(10))})
+    return await Position.fetchWithPositionId({ provider, positionId: BigInt(positionId.toString(10)) })
   }
 
   /**
@@ -184,7 +185,7 @@ export class Position {
     provider: ethers.providers.Provider,
     address: string
   ): Promise<Position[]> {
-    const balance = await Position.getPositionCount({provider, address})
+    const balance = await Position.getPositionCount({ provider, address })
 
     const chainId = (await provider.getNetwork()).chainId
     const contract = new ethers.Contract(
@@ -199,7 +200,7 @@ export class Position {
     }
     const positionIds = (await Promise.all(positionIdsPromises)).map((id) => BigInt(id.toString(10)))
 
-    return await Promise.all(positionIds.map((id) => Position.fetchWithPositionId({provider, positionId: id})))
+    return await Promise.all(positionIds.map((id) => Position.fetchWithPositionId({ provider, positionId: id })))
   }
 
   /**
@@ -237,6 +238,35 @@ export class Position {
     this.positionId = positionId ? bigIntFromBigintIsh(positionId) : undefined
     this.tokensOwed0 = tokensOwed0 ? bigIntFromBigintIsh(tokensOwed0) : undefined
     this.tokensOwed1 = tokensOwed1 ? bigIntFromBigintIsh(tokensOwed1) : undefined
+  }
+
+  /**
+   * Creates the position on-chain and mints the NFT. Can only be called if `positionId` is null, e.g.
+   * the position wasn't created yet.
+   *
+   * You can provide mint options in `options`, including recipient of the NFT.
+   *
+   * @param signer The signer to use to sign and send the transaction.
+   * @param provider The provider to use to propagate the transaction.
+   * @param options The mint options.
+   * @param transactionOverrides If you want to customize gas limit, gas price, etc.
+   *
+   * @returns The transaction response including hash. You need to wait for transaction inclusion yourself.
+   */
+  public async mint({
+    signer,
+    provider,
+    options,
+    transactionOverrides,
+  }: {
+    signer: ethers.Signer
+    provider: ethers.providers.Provider
+    options: MintOptions
+    transactionOverrides?: TransactionOverrides
+  }): Promise<ethers.providers.TransactionResponse> {
+    invariant(!this.positionId, 'position cannot exist when calling mint()')
+
+    return NonfungiblePositionManager.createPositionOnChain(signer, provider, this, options, transactionOverrides)
   }
 
   /**
