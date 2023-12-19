@@ -458,7 +458,7 @@ export class Pool {
     fee: FeeAmount,
     transactionOverrides?: TransactionOverrides,
     factoryAddress?: string
-  ): Promise<ethers.providers.TransactionResponse> {
+  }): Promise<ethers.providers.TransactionResponse> {
     let signer = _signer
     try {
       signer = _signer.connect(provider)
