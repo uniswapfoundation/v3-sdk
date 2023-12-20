@@ -130,7 +130,7 @@ export class Position {
     )
     const balance = await contract.balanceOf(address)
 
-    return BigInt(balance.toString(10))
+    return BigInt(balance.toString())
   }
 
   /**
@@ -164,7 +164,7 @@ export class Position {
       ethers.BigNumber.from(bigIntFromBigintIsh(index).toString(10))
     )
 
-    return await Position.fetchWithPositionId({ provider, positionId: BigInt(positionId.toString(10)) })
+    return await Position.fetchWithPositionId({ provider, positionId: BigInt(positionId.toString()) })
   }
 
   /**
@@ -198,7 +198,7 @@ export class Position {
     for (let i = 0n; i < balance; i += 1n) {
       positionIdsPromises.push(contract.tokenOfOwnerByIndex(address, ethers.BigNumber.from(i.toString(10))))
     }
-    const positionIds = (await Promise.all(positionIdsPromises)).map((id) => BigInt(id.toString(10)))
+    const positionIds = (await Promise.all(positionIdsPromises)).map((id) => BigInt(id.toString()))
 
     return await Promise.all(positionIds.map((id) => Position.fetchWithPositionId({ provider, positionId: id })))
   }
