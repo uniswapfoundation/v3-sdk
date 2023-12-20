@@ -246,7 +246,7 @@ export abstract class SwapRouter {
     signer
   }: {
     trades: Trade<Currency, Currency, TradeType> | Trade<Currency, Currency, TradeType>[]
-    options: SwapOptions | undefined
+    options?: SwapOptions | undefined
     signer: Signer
   }): Promise<TransactionResponse> {
 
@@ -335,7 +335,7 @@ export abstract class SwapRouter {
       pool: Pool
       amount: TTradeType extends TradeType.EXACT_INPUT ? CurrencyAmount<TInput> : CurrencyAmount<TOutput>
       tradeType: TradeType
-      swapOptions: SwapOptions | undefined
+      swapOptions?: SwapOptions | undefined
       signer: Signer
     }): Promise<TransactionResponse> {
     const secondCurrency = amount.currency.equals(pool.token0) ? pool.token1 : pool.token0
@@ -381,7 +381,7 @@ export abstract class SwapRouter {
       route: Route<TInput, TOutput>,
       amount: TTradeType extends TradeType.EXACT_INPUT ? CurrencyAmount<TInput> : CurrencyAmount<TOutput>,
       tradeType: TradeType,
-      swapOptions: SwapOptions | undefined,
+      swapOptions?: SwapOptions | undefined,
       signer: Signer
     }): Promise<TransactionResponse> {
 
@@ -435,8 +435,8 @@ export abstract class SwapRouter {
       currencyIn: TTradeType extends TradeType.EXACT_INPUT ? undefined | TInput : TInput
       currencyOut: TTradeType extends TradeType.EXACT_OUTPUT ? undefined | TOutput : TOutput
       tradeType: TradeType
-      bestTradeOptions: BestTradeOptions | undefined
-      swapOptions: SwapOptions | undefined
+      bestTradeOptions?: BestTradeOptions | undefined
+      swapOptions?: SwapOptions | undefined
       signer: Signer
     }): Promise<TransactionResponse> {
     if (bestTradeOptions === undefined) bestTradeOptions = { maxNumResults: 3, maxHops: 3 }
@@ -484,7 +484,7 @@ export abstract class SwapRouter {
       route: Route<TInput, TOutput>
       amount: TTradeType extends TradeType.EXACT_INPUT ? CurrencyAmount<TInput> : CurrencyAmount<TOutput>
       tradeType: TradeType
-      swapOptions: SwapOptions | undefined
+      swapOptions?: SwapOptions | undefined
       signer: Signer
     }): Promise<TransactionResponse> {
     const provider = signer.provider
