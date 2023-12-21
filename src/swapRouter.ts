@@ -1,7 +1,17 @@
 import { Interface } from '@ethersproject/abi'
 import { Signer } from '@ethersproject/abstract-signer'
 import { TransactionResponse } from '@ethersproject/providers'
-import { BigintIsh, Currency, CurrencyAmount, Percent, TradeType, validateAndParseAddress, SUPPORTED_CHAINS, SupportedChainsType, ChainId } from '@uniswap/sdk-core'
+import {
+  BigintIsh,
+  Currency,
+  CurrencyAmount,
+  Percent,
+  TradeType,
+  validateAndParseAddress,
+  SUPPORTED_CHAINS,
+  SupportedChainsType,
+  ChainId,
+} from '@uniswap/sdk-core'
 import invariant from 'tiny-invariant'
 import { BestTradeOptions, Trade } from './entities/trade'
 import { ADDRESS_ZERO } from './constants'
@@ -52,21 +62,21 @@ export interface SwapOptions {
 }
 
 const swapRouterAddresses: Record<SupportedChainsType, string | undefined> = {
-  [ChainId.MAINNET]: "0xE592427A0AEce92De3Edee1F18E0157C05861564",
-  [ChainId.OPTIMISM]: "0xE592427A0AEce92De3Edee1F18E0157C05861564",
-  [ChainId.ARBITRUM_ONE]: "0xE592427A0AEce92De3Edee1F18E0157C05861564",
-  [ChainId.POLYGON]: "0xE592427A0AEce92De3Edee1F18E0157C05861564",
-  [ChainId.POLYGON_MUMBAI]: "0xE592427A0AEce92De3Edee1F18E0157C05861564",
-  [ChainId.GOERLI]: "0xE592427A0AEce92De3Edee1F18E0157C05861564",
-  [ChainId.CELO]: "0x5615CDAb10dc425a742d643d949a7F474C01abc4",
-  [ChainId.CELO_ALFAJORES]: "0x5615CDAb10dc425a742d643d949a7F474C01abc4",
-  [ChainId.BNB]: "0x83c346ba3d4Bf36b308705e24Fad80999401854b",
+  [ChainId.MAINNET]: '0xE592427A0AEce92De3Edee1F18E0157C05861564',
+  [ChainId.OPTIMISM]: '0xE592427A0AEce92De3Edee1F18E0157C05861564',
+  [ChainId.ARBITRUM_ONE]: '0xE592427A0AEce92De3Edee1F18E0157C05861564',
+  [ChainId.POLYGON]: '0xE592427A0AEce92De3Edee1F18E0157C05861564',
+  [ChainId.POLYGON_MUMBAI]: '0xE592427A0AEce92De3Edee1F18E0157C05861564',
+  [ChainId.GOERLI]: '0xE592427A0AEce92De3Edee1F18E0157C05861564',
+  [ChainId.CELO]: '0x5615CDAb10dc425a742d643d949a7F474C01abc4',
+  [ChainId.CELO_ALFAJORES]: '0x5615CDAb10dc425a742d643d949a7F474C01abc4',
+  [ChainId.BNB]: '0x83c346ba3d4Bf36b308705e24Fad80999401854b',
   [ChainId.OPTIMISM_GOERLI]: undefined,
-  [ChainId.ARBITRUM_GOERLI]: "0xE592427A0AEce92De3Edee1F18E0157C05861564",
+  [ChainId.ARBITRUM_GOERLI]: '0xE592427A0AEce92De3Edee1F18E0157C05861564',
   [ChainId.SEPOLIA]: undefined,
   [ChainId.AVALANCHE]: undefined,
   [ChainId.BASE]: undefined,
-  [ChainId.BASE_GOERLI]: undefined
+  [ChainId.BASE_GOERLI]: undefined,
 }
 
 /**
@@ -78,7 +88,7 @@ export abstract class SwapRouter {
   /**
    * Cannot be constructed.
    */
-  private constructor() { }
+  private constructor() {}
 
   /**
    * Produces the on-chain method name to call and the hex encoded parameters to pass as arguments for a given trade.
@@ -243,13 +253,12 @@ export abstract class SwapRouter {
   public static async executeTrade({
     trades,
     options,
-    signer
+    signer,
   }: {
     trades: Trade<Currency, Currency, TradeType> | Trade<Currency, Currency, TradeType>[]
     options?: SwapOptions | undefined
     signer: Signer
   }): Promise<TransactionResponse> {
-
     if (options === undefined) {
       options = {
         slippageTolerance: new Percent(50, 10_000),
@@ -283,12 +292,7 @@ export abstract class SwapRouter {
 
       invariant(provider !== undefined, 'No provider')
 
-      const allowance = await getAllowance(
-        routerAddress,
-        tokenIn.address,
-        signerAddress,
-        provider
-      )
+      const allowance = await getAllowance(routerAddress, tokenIn.address, signerAddress, provider)
       const maxAmountIn = firstTrade.inputAmount.quotientBigInt
 
       if (allowance < maxAmountIn) {
@@ -296,7 +300,7 @@ export abstract class SwapRouter {
           contractAddress: routerAddress,
           tokenAddress: tokenIn.address,
           amount: maxAmountIn,
-          signer
+          signer,
         })
       }
     }
@@ -305,14 +309,14 @@ export abstract class SwapRouter {
       data: methodParameters.calldata,
       to: routerAddress,
       value: methodParameters.value,
-      from: signerAddress
+      from: signerAddress,
     }
 
     return signer.sendTransaction(tx)
   }
 
   /**
-   * Executes a swap on a Pool. Creates a Route and uses swapUsingRoutes internally. 
+   * Executes a swap on a Pool. Creates a Route and uses swapUsingRoutes internally.
    * Fetches the input or output amount from the SwapQuoter.
    * @template TInput The input token, either Ether or an ERC-20
    * @template TOutput The output token, either Ether or an ERC-20
@@ -325,37 +329,35 @@ export abstract class SwapRouter {
   public static async executeQuotedSwapOnPool<
     TInput extends Currency,
     TOutput extends Currency,
-    TTradeType extends TradeType>({
-      pool,
-      amount,
-      tradeType,
-      swapOptions,
-      signer
-    }: {
-      pool: Pool
-      amount: TTradeType extends TradeType.EXACT_INPUT ? CurrencyAmount<TInput> : CurrencyAmount<TOutput>
-      tradeType: TradeType
-      swapOptions?: SwapOptions | undefined
-      signer: Signer
-    }): Promise<TransactionResponse> {
+    TTradeType extends TradeType
+  >({
+    pool,
+    amount,
+    tradeType,
+    swapOptions,
+    signer,
+  }: {
+    pool: Pool
+    amount: TTradeType extends TradeType.EXACT_INPUT ? CurrencyAmount<TInput> : CurrencyAmount<TOutput>
+    tradeType: TradeType
+    swapOptions?: SwapOptions | undefined
+    signer: Signer
+  }): Promise<TransactionResponse> {
     const secondCurrency = amount.currency.equals(pool.token0) ? pool.token1 : pool.token0
 
-    invariant((
-      secondCurrency.equals(pool.token0) && amount.currency.equals(pool.token1)
-    ) || (
-        secondCurrency.equals(pool.token1) && amount.currency.equals(pool.token0)
-      ), 'CurrencyAmount not matching Pool')
-
-    const { inputToken, outputToken } = tradeType === TradeType.EXACT_INPUT ?
-      { inputToken: amount.currency, outputToken: secondCurrency } :
-      { inputToken: secondCurrency, outputToken: amount.currency }
-
-    const tradeRoute = new Route(
-      [pool],
-      inputToken,
-      outputToken
+    invariant(
+      (secondCurrency.equals(pool.token0) && amount.currency.equals(pool.token1)) ||
+        (secondCurrency.equals(pool.token1) && amount.currency.equals(pool.token0)),
+      'CurrencyAmount not matching Pool'
     )
-    return this.executeQuotedSwapFromRoute({route: tradeRoute, amount, tradeType, swapOptions, signer})
+
+    const { inputToken, outputToken } =
+      tradeType === TradeType.EXACT_INPUT
+        ? { inputToken: amount.currency, outputToken: secondCurrency }
+        : { inputToken: secondCurrency, outputToken: amount.currency }
+
+    const tradeRoute = new Route([pool], inputToken, outputToken)
+    return this.executeQuotedSwapFromRoute({ route: tradeRoute, amount, tradeType, swapOptions, signer })
   }
 
   /**
@@ -371,20 +373,20 @@ export abstract class SwapRouter {
   public static async executeQuotedSwapFromRoute<
     TInput extends Currency,
     TOutput extends Currency,
-    TTradeType extends TradeType>({
-      route,
-      amount,
-      tradeType,
-      swapOptions,
-      signer
-    }: {
-      route: Route<TInput, TOutput>,
-      amount: TTradeType extends TradeType.EXACT_INPUT ? CurrencyAmount<TInput> : CurrencyAmount<TOutput>,
-      tradeType: TradeType,
-      swapOptions?: SwapOptions | undefined,
-      signer: Signer
-    }): Promise<TransactionResponse> {
-
+    TTradeType extends TradeType
+  >({
+    route,
+    amount,
+    tradeType,
+    swapOptions,
+    signer,
+  }: {
+    route: Route<TInput, TOutput>
+    amount: TTradeType extends TradeType.EXACT_INPUT ? CurrencyAmount<TInput> : CurrencyAmount<TOutput>
+    tradeType: TradeType
+    swapOptions?: SwapOptions | undefined
+    signer: Signer
+  }): Promise<TransactionResponse> {
     let inputAmount: CurrencyAmount<TInput>
     let outputAmount: CurrencyAmount<TOutput>
 
@@ -394,19 +396,19 @@ export abstract class SwapRouter {
 
     if (tradeType === TradeType.EXACT_INPUT) {
       inputAmount = amount as CurrencyAmount<TInput>
-      outputAmount = await SwapQuoter.callQuoter({route, amount, tradeType, provider}) as CurrencyAmount<TOutput>
+      outputAmount = (await SwapQuoter.callQuoter({ route, amount, tradeType, provider })) as CurrencyAmount<TOutput>
     } else {
       outputAmount = amount as CurrencyAmount<TOutput>
-      inputAmount = await SwapQuoter.callQuoter({route, amount, tradeType, provider}) as CurrencyAmount<TInput>
+      inputAmount = (await SwapQuoter.callQuoter({ route, amount, tradeType, provider })) as CurrencyAmount<TInput>
     }
 
     let trade = Trade.createUncheckedTrade({ route, inputAmount, outputAmount, tradeType })
 
-    return this.executeTrade({trades: trade, options: swapOptions, signer})
+    return this.executeTrade({ trades: trade, options: swapOptions, signer })
   }
 
   /**
-   * Given a list of Pools, and an amount in or out, finds the best trade containing the pools and 
+   * Given a list of Pools, and an amount in or out, finds the best trade containing the pools and
    * executes the trade directly.
    * @param pools over which the trade can be made
    * @param amount The Input amount for EXACT_IN trades, the Output amount for EXACT_OUT trades
@@ -420,25 +422,26 @@ export abstract class SwapRouter {
   public static async executeBestSimulatedSwapOnPools<
     TInput extends Currency,
     TOutput extends Currency,
-    TTradeType extends TradeType>({
-      pools,
-      amount,
-      currencyIn,
-      currencyOut,
-      tradeType,
-      bestTradeOptions,
-      swapOptions,
-      signer
-    }: {
-      pools: Pool[]
-      amount: TTradeType extends TradeType.EXACT_INPUT ? CurrencyAmount<TInput> : CurrencyAmount<TOutput>
-      currencyIn: TTradeType extends TradeType.EXACT_INPUT ? undefined | TInput : TInput
-      currencyOut: TTradeType extends TradeType.EXACT_OUTPUT ? undefined | TOutput : TOutput
-      tradeType: TradeType
-      bestTradeOptions?: BestTradeOptions | undefined
-      swapOptions?: SwapOptions | undefined
-      signer: Signer
-    }): Promise<TransactionResponse> {
+    TTradeType extends TradeType
+  >({
+    pools,
+    amount,
+    currencyIn,
+    currencyOut,
+    tradeType,
+    bestTradeOptions,
+    swapOptions,
+    signer,
+  }: {
+    pools: Pool[]
+    amount: TTradeType extends TradeType.EXACT_INPUT ? CurrencyAmount<TInput> : CurrencyAmount<TOutput>
+    currencyIn: TTradeType extends TradeType.EXACT_INPUT ? undefined | TInput : TInput
+    currencyOut: TTradeType extends TradeType.EXACT_OUTPUT ? undefined | TOutput : TOutput
+    tradeType: TradeType
+    bestTradeOptions?: BestTradeOptions | undefined
+    swapOptions?: SwapOptions | undefined
+    signer: Signer
+  }): Promise<TransactionResponse> {
     if (bestTradeOptions === undefined) bestTradeOptions = { maxNumResults: 3, maxHops: 3 }
 
     const provider = signer.provider
@@ -453,14 +456,19 @@ export abstract class SwapRouter {
 
     let trades: Trade<TInput, TOutput, TradeType.EXACT_INPUT>[] | Trade<TInput, TOutput, TradeType.EXACT_OUTPUT>[]
     if (tradeType === TradeType.EXACT_INPUT) {
-      trades = await Trade.bestTradeExactIn(pools, amount as CurrencyAmount<TInput>, currencyOut as TOutput, bestTradeOptions)
+      trades = await Trade.bestTradeExactIn(
+        pools,
+        amount as CurrencyAmount<TInput>,
+        currencyOut as TOutput,
+        bestTradeOptions
+      )
     } else {
       trades = await Trade.bestTradeExactOut(pools, currencyIn as TInput, amount as CurrencyAmount<TOutput>)
     }
 
     invariant(trades.length > 0, 'Could not find a trade route on given Pools')
 
-    return this.executeTrade({trades: trades[0], options: swapOptions, signer})
+    return this.executeTrade({ trades: trades[0], options: swapOptions, signer })
   }
 
   /**
@@ -474,19 +482,20 @@ export abstract class SwapRouter {
   public static async executeSimulatedSwapFromRoute<
     TInput extends Currency,
     TOutput extends Currency,
-    TTradeType extends TradeType>({
-      route,
-      amount,
-      tradeType,
-      swapOptions,
-      signer
-    }: {
-      route: Route<TInput, TOutput>
-      amount: TTradeType extends TradeType.EXACT_INPUT ? CurrencyAmount<TInput> : CurrencyAmount<TOutput>
-      tradeType: TradeType
-      swapOptions?: SwapOptions | undefined
-      signer: Signer
-    }): Promise<TransactionResponse> {
+    TTradeType extends TradeType
+  >({
+    route,
+    amount,
+    tradeType,
+    swapOptions,
+    signer,
+  }: {
+    route: Route<TInput, TOutput>
+    amount: TTradeType extends TradeType.EXACT_INPUT ? CurrencyAmount<TInput> : CurrencyAmount<TOutput>
+    tradeType: TradeType
+    swapOptions?: SwapOptions | undefined
+    signer: Signer
+  }): Promise<TransactionResponse> {
     const provider = signer.provider
 
     invariant(provider !== undefined, 'Signer has no network connection')
@@ -495,6 +504,6 @@ export abstract class SwapRouter {
 
     let trade = await Trade.fromRoute(route, amount, tradeType)
 
-    return this.executeTrade({trades: trade, options: swapOptions, signer})
+    return this.executeTrade({ trades: trade, options: swapOptions, signer })
   }
 }
