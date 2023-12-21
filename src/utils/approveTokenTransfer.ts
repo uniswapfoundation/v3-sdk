@@ -13,27 +13,27 @@ import { BigNumber } from 'ethers'
  * @param signer The signer that approves the transfer on his behalf
  */
 export async function approveTokenTransfer({
-    contractAddress,
-    tokenAddress,
-    amount,
-    signer
+  contractAddress,
+  tokenAddress,
+  amount,
+  signer,
 }: {
-    contractAddress: string,
-    tokenAddress: string,
-    amount: BigintIsh,
-    signer: Signer
+  contractAddress: string
+  tokenAddress: string
+  amount: BigintIsh
+  signer: Signer
 }): Promise<TransactionReceipt> {
-    const tokenContract = new Contract(tokenAddress, ERC20_ABI, signer)
+  const tokenContract = new Contract(tokenAddress, ERC20_ABI, signer)
 
-    if (typeof amount !== 'string') {
-        if (BigNumber.isBigNumber(amount)) {
-            amount = amount.toString()
-        } else {
-            amount = amount.toString(10)
-        }
+  if (typeof amount !== 'string') {
+    if (BigNumber.isBigNumber(amount)) {
+      amount = amount.toString()
+    } else {
+      amount = amount.toString(10)
     }
-    const tx: TransactionResponse = await tokenContract['approve'](contractAddress, amount)
-    return await tx.wait()
+  }
+  const tx: TransactionResponse = await tokenContract['approve'](contractAddress, amount)
+  return await tx.wait()
 }
 
 /**
@@ -45,12 +45,12 @@ export async function approveTokenTransfer({
  * @returns {Promise<bigint>} The transfer allowance of the contract
  */
 export async function getAllowance(
-    contractAddress: string,
-    tokenAddress: string,
-    signerAddress: string,
-    provider: Provider
+  contractAddress: string,
+  tokenAddress: string,
+  signerAddress: string,
+  provider: Provider
 ): Promise<bigint> {
-    const tokenContract = new Contract(tokenAddress, ERC20_ABI, provider)
-    const allowance = await tokenContract['allowance'](signerAddress, contractAddress)
-    return BigInt(allowance.toString(10))
+  const tokenContract = new Contract(tokenAddress, ERC20_ABI, provider)
+  const allowance = await tokenContract['allowance'](signerAddress, contractAddress)
+  return BigInt(allowance.toString(10))
 }
