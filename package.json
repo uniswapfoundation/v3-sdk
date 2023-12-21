@@ -45,7 +45,7 @@
     "typescript": "^5.0.4"
   },
   "engines": {
-    "node": ">=10"
+    "node": ">=16"
   },
   "prettier": {
     "printWidth": 120,
