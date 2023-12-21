@@ -6,6 +6,54 @@ import { SwapRouter } from 'src/swapRouter'
 import { nearestUsableTick, TickMath } from 'src/utils'
 import { encodeSqrtRatioX96 } from 'src/utils/encodeSqrtRatioX96'
 import { Route, Trade } from 'src/entities'
+import { ethers } from 'ethers'
+import getBlock from './stubs/calls/getBlock.json'
+import callResults from './stubs/calls/callResults.json'
+import getTransactionReceipts from './stubs/calls/getTransactionReceipts.json'
+
+let expectedMockedTransactionHash: { [key: string]: string } = {}
+class SwapRouterMockProvider extends ethers.providers.BaseProvider {
+  async perform(method: string, params: any): Promise<any> {
+    if (method === 'getGasPrice') {
+      return '0xBA43B7400'
+    }
+    if (method === 'getBlock') {
+      return getBlock
+    }
+    if (method === 'getTransactionCount') {
+      return 0
+    }
+    if (method === 'estimateGas') {
+      return 1000000
+    }
+    if (method === 'getBlockNumber') {
+      return getBlock.number
+    }
+    if (method === 'sendTransaction') {
+      return expectedMockedTransactionHash[params.signedTransaction]
+    }
+    if (method === 'call') {
+      for (const result of callResults) {
+        if (result.transaction.to === params.transaction.to && result.transaction.data === params.transaction.data) {
+          return result.result
+        }
+      }
+    }
+    if (method === 'getTransactionReceipt') {
+      for (const result of getTransactionReceipts) {
+        if (result.hash === params.transactionHash) {
+          return result.result
+        }
+      }
+    }
+
+    return super.perform(method, params)
+  }
+
+  async detectNetwork(): Promise<ethers.providers.Network> {
+    return { chainId: 1, name: 'mainnet' }
+  }
+}
 
 describe('SwapRouter', () => {
   const ETHER = Ether.onChain(1)
@@ -18,6 +66,9 @@ describe('SwapRouter', () => {
   const sqrtRatioX96 = encodeSqrtRatioX96(1, 1)
   const liquidity = 1_000_000
   const WETH = WETH9[1]
+
+  const USDC = new Token(1, '0xA0b86991c6218b36c1d19D4a2e9Eb0cE3606eB48', 6, 'USDC', 'USD Coin')
+  const DAI = new Token(1, '0x6B175474E89094C44Da98b954EedeAC495271d0F', 18, 'DAI', 'DAI Stablecoin')
 
   const makePool = (token0: Token, token1: Token) => {
     return new Pool(token0, token1, feeAmount, sqrtRatioX96, liquidity, TickMath.getTickAtSqrtRatio(sqrtRatioX96), [
@@ -875,6 +926,154 @@ describe('SwapRouter', () => {
         '0xac9650d800000000000000000000000000000000000000000000000000000000000000200000000000000000000000000000000000000000000000000000000000000002000000000000000000000000000000000000000000000000000000000000004000000000000000000000000000000000000000000000000000000000000001c00000000000000000000000000000000000000000000000000000000000000144f28c0498000000000000000000000000000000000000000000000000000000000000002000000000000000000000000000000000000000000000000000000000000000a00000000000000000000000000000000000000000000000000000000000000003000000000000000000000000000000000000000000000000000000000000007b0000000000000000000000000000000000000000000000000000000000000064000000000000000000000000000000000000000000000000000000000000006900000000000000000000000000000000000000000000000000000000000000420000000000000000000000000000000000000004000bb80000000000000000000000000000000000000002000bb80000000000000000000000000000000000000001000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000144f28c0498000000000000000000000000000000000000000000000000000000000000002000000000000000000000000000000000000000000000000000000000000000a00000000000000000000000000000000000000000000000000000000000000003000000000000000000000000000000000000000000000000000000000000007b0000000000000000000000000000000000000000000000000000000000000064000000000000000000000000000000000000000000000000000000000000006900000000000000000000000000000000000000000000000000000000000000420000000000000000000000000000000000000004000bb80000000000000000000000000000000000000003000bb8000000000000000000000000000000000000000100000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000'
       )
       expect(value).toBe('0x00')
+    })
+  })
+
+  // RPC Testing
+
+  describe('#rpc', () => {
+    // Mock provider used in all provider function calls
+    let signer = new ethers.Wallet('0xd2e184729775354772525ce7a76299efc4a6e157075940d0caa79729f75ed8b4')
+    const mockProvider = new SwapRouterMockProvider(1)
+    signer = signer.connect(mockProvider)
+
+    describe('#executeTrade', () => {
+      it('correctly executes a trade', async () => {
+        const pool = await Pool.initFromChain({ provider: mockProvider, tokenA: USDC, tokenB: DAI, fee: FeeAmount.LOW })
+        await pool.initializeTicksFromRpc()
+
+        expectedMockedTransactionHash[
+          '0x02f8b101808459682f00851c51c3f7e8830f424094a0b86991c6218b36c1d19d4a2e9eb0ce3606eb4880b844095ea7b3000000000000000000000000e592427a0aece92de3edee1f18e0157c0586156400000000000000000000000000000000000000000000000000000000000003e8c080a0376db974f5c5e1c9298623faf37a6771af6b55bb44be3fe1ebaef38e73ce07d2a02fefd936bc69266d8c4d7d42a7790908e47a3d318377bb7f2436aaa039df13a5'
+        ] = '0xe11c9c7e0ce3207f29e93586d607287ca4f78a839387a314baf669e31fcf58a5'
+        expectedMockedTransactionHash[
+          '0x02f9017201808459682f00851c51c3f7e8830f424094e592427a0aece92de3edee1f18e0157c0586156480b90104414bf389000000000000000000000000a0b86991c6218b36c1d19d4a2e9eb0ce3606eb480000000000000000000000006b175474e89094c44da98b954eedeac495271d0f00000000000000000000000000000000000000000000000000000000000001f400000000000000000000000060c3fd2229d9addda742001764e1b1e1fd9f65fb0000000000000000000000000000000000000000000000000000000065843c1400000000000000000000000000000000000000000000000000000000000003e8000000000000000000000000000000000000000000000000000387b3113a89b90000000000000000000000000000000000000000000000000000000000000000c001a0a784ef2194afa09574e5a13a29a3725ae53911cfe41ff9bd32e98d176c543bbea00aa1567f5ce6516034cb9c8bf8711223c28ad55a5d8743be889e8eb0cff9e12f'
+        ] = '0x88a368ad54bf52579fba72633a5e8a45df0eb960aca24fc48af69050179bfda7'
+        const result = await SwapRouter.executeTrade({
+          signer: signer,
+          trades: await Trade.bestTradeExactIn([pool], CurrencyAmount.fromFractionalAmount(USDC, 1000, 1), DAI),
+          options: {
+            deadline: BigInt('1000000000000000000'),
+            recipient: signer.address,
+            slippageTolerance: new Percent(1, 1000),
+          },
+        })
+
+        expect(result.v).toEqual(1)
+        expect(result.r).toEqual('0x36d4cab337f44f43d34bd982a06982bed9ec3cdc0207d15c13b06eee5fafe914')
+        expect(result.s).toEqual('0x5f147dd80ba796020f43268f0b6c8959408b404c1a5a7d3058e2dbd80cfd296d')
+      })
+    })
+
+    describe('#executeQuotedSwapOnPool', () => {
+      it('correctly executes a quoted swap on pool', async () => {
+        const pool = await Pool.initFromChain({ provider: mockProvider, tokenA: USDC, tokenB: DAI, fee: FeeAmount.LOW })
+        await pool.initializeTicksFromRpc()
+
+        expectedMockedTransactionHash[
+          '0x02f8b101808459682f00851c51c3f7e8830f424094a0b86991c6218b36c1d19d4a2e9eb0ce3606eb4880b844095ea7b3000000000000000000000000e592427a0aece92de3edee1f18e0157c05861564000000000000000000000000000000000000000000000000000000000000c350c001a07ee69557a4c4ba9d9b3677e7b69ce3604c72d0bcb110c1e43fee768a2cabebe9a0599d863ccebe9c4747dfbe50c677ab30b993dad255c3a7bd350028c3333e0e8f'
+        ] = '0x0b5684fd3c090b9ae793400144ef768036926f4020eb1ede9886fb89f35c3629'
+        const result = await SwapRouter.executeQuotedSwapOnPool({
+          pool: pool,
+          amount: CurrencyAmount.fromFractionalAmount(USDC, 50000, 1),
+          signer: signer,
+          tradeType: TradeType.EXACT_INPUT,
+          swapOptions: {
+            deadline: BigInt('1000000000000000000'),
+            recipient: signer.address,
+            slippageTolerance: new Percent(1, 1000),
+          },
+        })
+
+        expect(result.v).toEqual(0)
+        expect(result.r).toEqual('0x4d2865303ec99e5c2cc8f45b907cedaa28b91601a93e82c217f3d888f5e51e27')
+        expect(result.s).toEqual('0x24b35c78b7397793fb269002736b35839629bad225424a5d77dcb42b746ce1de')
+      })
+    })
+
+    describe('#executeQuotedSwapFromRoute', () => {
+      it('correctly executes a quoted swap from route', async () => {
+        const pool = await Pool.initFromChain({ provider: mockProvider, tokenA: USDC, tokenB: DAI, fee: FeeAmount.LOW })
+        await pool.initializeTicksFromRpc()
+
+        expectedMockedTransactionHash[
+          '0x02f9017201808459682f00851c51c3f7e8830f424094e592427a0aece92de3edee1f18e0157c0586156480b90104414bf389000000000000000000000000a0b86991c6218b36c1d19d4a2e9eb0ce3606eb480000000000000000000000006b175474e89094c44da98b954eedeac495271d0f00000000000000000000000000000000000000000000000000000000000001f400000000000000000000000060c3fd2229d9addda742001764e1b1e1fd9f65fb0000000000000000000000000000000000000000000000000de0b6b3a764000000000000000000000000000000000000000000000000000000000000000249f00000000000000000000000000000000000000000000000000213e4b779a49c950000000000000000000000000000000000000000000000000000000000000000c001a01012eea64107c9168ea61393d8145c38160625a9218a14fe68298b66e5fcf92ba025115747600229a59514fca97670ae1fcedd151d543cc13368d99af4f67d025d'
+        ] = '0x6d7c6a8f1796e1b6b082c9f35db9f3afe320d9781e17184a3d88eae40463ad70'
+        const result = await SwapRouter.executeQuotedSwapFromRoute({
+          route: new Route([pool], USDC, DAI),
+          amount: CurrencyAmount.fromFractionalAmount(USDC, 150000, 1),
+          signer: signer,
+          tradeType: TradeType.EXACT_INPUT,
+          swapOptions: {
+            deadline: BigInt('1000000000000000000'),
+            recipient: signer.address,
+            slippageTolerance: new Percent(1, 1000),
+          },
+        })
+
+        expect(result.v).toEqual(1)
+        expect(result.r).toEqual('0x1012eea64107c9168ea61393d8145c38160625a9218a14fe68298b66e5fcf92b')
+        expect(result.s).toEqual('0x25115747600229a59514fca97670ae1fcedd151d543cc13368d99af4f67d025d')
+      })
+    })
+
+    describe('#executeBestSimulatedSwapOnPools', () => {
+      it('correctly executes a simulated swap on pools', async () => {
+        const pool = await Pool.initFromChain({ provider: mockProvider, tokenA: USDC, tokenB: DAI, fee: FeeAmount.LOW })
+        await pool.initializeTicksFromRpc()
+
+        expectedMockedTransactionHash[
+          '0x02f8b101808459682f00851c51c3f7e8830f424094a0b86991c6218b36c1d19d4a2e9eb0ce3606eb4880b844095ea7b3000000000000000000000000e592427a0aece92de3edee1f18e0157c05861564000000000000000000000000000000000000000000000000000000000001b1a3c080a03150f4759e465025d3418decfeed42b9e805ef1cde86f11097bb6a0616801e4ea02b2a2c6d49806bc7c07f73f5539f4c5f1309addba5515b4d6d6644eda32fd53d'
+        ] = '0x1f983b00d6971bddbcd012d2a863e79381fc6857501b10620ebc8e409563645d'
+        expectedMockedTransactionHash[
+          '0x02f9017201808459682f00851c51c3f7e8830f424094e592427a0aece92de3edee1f18e0157c0586156480b90104414bf389000000000000000000000000a0b86991c6218b36c1d19d4a2e9eb0ce3606eb480000000000000000000000006b175474e89094c44da98b954eedeac495271d0f00000000000000000000000000000000000000000000000000000000000001f400000000000000000000000060c3fd2229d9addda742001764e1b1e1fd9f65fb0000000000000000000000000000000000000000000000000de0b6b3a7640000000000000000000000000000000000000000000000000000000000000001b1a30000000000000000000000000000000000000000000000000189a36d39554ae80000000000000000000000000000000000000000000000000000000000000000c001a060d0f112983dcece34fd75ca89e21713fc6a3770258ea83e9c1875e1f60f8ccea0704181eaac02eea61bde575b0eb70acccdcf07bae5dddd94aabcf575a853a323'
+        ] = '0x8ee63e23e61dec6e79775c8b7f0585098819a9ac0039d6f8623dff3c960859a2'
+        const result = await SwapRouter.executeBestSimulatedSwapOnPools({
+          currencyIn: USDC,
+          currencyOut: DAI,
+          pools: [pool],
+          amount: CurrencyAmount.fromFractionalAmount(USDC, 111011, 1),
+          signer: signer,
+          tradeType: TradeType.EXACT_INPUT,
+          swapOptions: {
+            deadline: BigInt('1000000000000000000'),
+            recipient: signer.address,
+            slippageTolerance: new Percent(1, 1000),
+          },
+        })
+
+        expect(result.v).toEqual(1)
+        expect(result.r).toEqual('0x60d0f112983dcece34fd75ca89e21713fc6a3770258ea83e9c1875e1f60f8cce')
+        expect(result.s).toEqual('0x704181eaac02eea61bde575b0eb70acccdcf07bae5dddd94aabcf575a853a323')
+      })
+    })
+
+    describe('#executeSimulatedSwapFromRoute', () => {
+      it('correctly executes a simulated swap from route', async () => {
+        const pool = await Pool.initFromChain({ provider: mockProvider, tokenA: USDC, tokenB: DAI, fee: FeeAmount.LOW })
+        await pool.initializeTicksFromRpc()
+
+        expectedMockedTransactionHash[
+          '0x02f8b101808459682f00851c51c3f7e8830f424094a0b86991c6218b36c1d19d4a2e9eb0ce3606eb4880b844095ea7b3000000000000000000000000e592427a0aece92de3edee1f18e0157c05861564000000000000000000000000000000000000000000000000000000000000d8f8c001a0c900cf29c796df51a039b42e4fc0af0449cfdc09b05f9f43e223a33d733a5d8ca03fabebfee575066f6b13422edf23cece47040023109243d183ba93e1e83b7936'
+        ] = '0x928130edc794dfa5f93b8096ef88811976a79bf1badbbd9272b4fd2e4efd7a71'
+        expectedMockedTransactionHash[
+          '0x02f9017201808459682f00851c51c3f7e8830f424094e592427a0aece92de3edee1f18e0157c0586156480b90104414bf389000000000000000000000000a0b86991c6218b36c1d19d4a2e9eb0ce3606eb480000000000000000000000006b175474e89094c44da98b954eedeac495271d0f00000000000000000000000000000000000000000000000000000000000001f400000000000000000000000060c3fd2229d9addda742001764e1b1e1fd9f65fb0000000000000000000000000000000000000000000000000de0b6b3a7640000000000000000000000000000000000000000000000000000000000000000d8f800000000000000000000000000000000000000000000000000c4f4ae0469fdf90000000000000000000000000000000000000000000000000000000000000000c080a02d01761c43dfc2d137210bfe153bc79921f9301636a5f2b249b261e1d42237c9a079ffbc7553b58879666a7aa86a3339e14e8b0a1b2e724a2784439538379d3de6'
+        ] = '0x29fae03b575c84a7e08967aa3a9ea019cf2983363c49efbfca09ffb1ce315225'
+        const result = await SwapRouter.executeSimulatedSwapFromRoute({
+          route: new Route([pool], USDC, DAI),
+          amount: CurrencyAmount.fromFractionalAmount(USDC, 55544, 1),
+          signer: signer,
+          tradeType: TradeType.EXACT_INPUT,
+          swapOptions: {
+            deadline: BigInt('1000000000000000000'),
+            recipient: signer.address,
+            slippageTolerance: new Percent(1, 1000),
+          },
+        })
+
+        expect(result.v).toEqual(0)
+        expect(result.r).toEqual('0x2d01761c43dfc2d137210bfe153bc79921f9301636a5f2b249b261e1d42237c9')
+        expect(result.s).toEqual('0x79ffbc7553b58879666a7aa86a3339e14e8b0a1b2e724a2784439538379d3de6')
+      })
     })
   })
 })

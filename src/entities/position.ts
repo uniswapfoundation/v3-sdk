@@ -159,7 +159,7 @@ export class Position {
       provider
     )
 
-    const positionId = contract.tokenOfOwnerByIndex(
+    const positionId = await contract.tokenOfOwnerByIndex(
       address,
       ethers.BigNumber.from(bigIntFromBigintIsh(index).toString(10))
     )
