@@ -1,5 +1,5 @@
 {
-  "name": "@uniswapfoundation/uniswap-v3-sdk",
+  "name": "@uniswapfoundation/v3-sdk",
   "license": "MIT",
   "publishConfig": {
     "access": "public"
@@ -11,7 +11,7 @@
   "files": [
     "dist"
   ],
-  "repository": "https://github.com/uniswapfoundation/uniswap-v3-sdk.git",
+  "repository": "https://github.com/uniswapfoundation/v3-sdk.git",
   "keywords": [
     "uniswap",
     "ethereum"
