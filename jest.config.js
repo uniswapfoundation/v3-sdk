@@ -13,15 +13,19 @@ module.exports = {
           // allow js in typescript
           allowJs: true,
         },
+        useESM: true,
       },
     ],
   },
   transformIgnorePatterns: [
     // allow lit-html transformation
-    'node_modules/(?!lit-html)',
+    'node_modules/(?!(lit-html|@uniswap))',
   ],
-  // for absolute imports
   moduleNameMapper: {
+    // for absolute imports
     'src/(.*)': '<rootDir>/src/$1',
+    // for esm modules in ts-jest
+    '^(\\.{1,2}/.*)\\.js$': '$1',
   },
+  extensionsToTreatAsEsm: ['.ts'],
 }

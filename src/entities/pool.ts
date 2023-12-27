@@ -120,14 +120,14 @@ export class Pool {
     fee,
     poolAddress,
     initCodeHashManualOverride,
-    factoryAddressOverride
+    factoryAddressOverride,
   }: {
-    provider: ethers.providers.Provider,
-    tokenA: Token,
-    tokenB: Token,
-    fee: FeeAmount,
-    poolAddress?: string,
-    initCodeHashManualOverride?: string,
+    provider: ethers.providers.Provider
+    tokenA: Token
+    tokenB: Token
+    fee: FeeAmount
+    poolAddress?: string
+    initCodeHashManualOverride?: string
     factoryAddressOverride?: string
   }): Promise<Pool> {
     const contract = new ethers.Contract(
@@ -173,11 +173,11 @@ export class Pool {
     const nextTickSqrtRatioX96 = TickMath.getSqrtRatioAtTickBigInt(tickCurrent + 1)
     invariant(
       bigIntFromBigintIsh(sqrtRatioX96) >= tickCurrentSqrtRatioX96 &&
-      bigIntFromBigintIsh(sqrtRatioX96) <= nextTickSqrtRatioX96,
+        bigIntFromBigintIsh(sqrtRatioX96) <= nextTickSqrtRatioX96,
       'PRICE_BOUNDS'
     )
-      // always create a copy of the list since we want the pool's tick list to be immutable
-      ;[this.token0, this.token1] = tokenA.sortsBefore(tokenB) ? [tokenA, tokenB] : [tokenB, tokenA]
+    // always create a copy of the list since we want the pool's tick list to be immutable
+    ;[this.token0, this.token1] = tokenA.sortsBefore(tokenB) ? [tokenA, tokenB] : [tokenB, tokenA]
     this.fee = fee
     this._sqrtRatioX96 = bigIntFromBigintIsh(sqrtRatioX96)
     this._liquidity = bigIntFromBigintIsh(liquidity)
@@ -336,14 +336,14 @@ export class Pool {
       let step: Partial<StepComputations> = {}
       step.sqrtPriceStartX96 = state.sqrtPriceX96
 
-        // because each iteration of the while loop rounds, we can't optimize this code (relative to the smart contract)
-        // by simply traversing to the next available tick, we instead need to exactly replicate
-        // tickBitmap.nextInitializedTickWithinOneWord
-        ;[step.tickNext, step.initialized] = await this.tickDataProvider.nextInitializedTickWithinOneWord(
-          state.tick,
-          zeroForOne,
-          this.tickSpacing
-        )
+      // because each iteration of the while loop rounds, we can't optimize this code (relative to the smart contract)
+      // by simply traversing to the next available tick, we instead need to exactly replicate
+      // tickBitmap.nextInitializedTickWithinOneWord
+      ;[step.tickNext, step.initialized] = await this.tickDataProvider.nextInitializedTickWithinOneWord(
+        state.tick,
+        zeroForOne,
+        this.tickSpacing
+      )
 
       if (step.tickNext < TickMath.MIN_TICK) {
         step.tickNext = TickMath.MIN_TICK
@@ -352,15 +352,15 @@ export class Pool {
       }
 
       step.sqrtPriceNextX96 = TickMath.getSqrtRatioAtTickBigInt(step.tickNext)
-        ;[state.sqrtPriceX96, step.amountIn, step.amountOut, step.feeAmount] = SwapMath.computeSwapStep(
-          state.sqrtPriceX96,
-          (zeroForOne ? step.sqrtPriceNextX96 < sqrtPriceLimitX96 : step.sqrtPriceNextX96 > sqrtPriceLimitX96)
-            ? sqrtPriceLimitX96
-            : step.sqrtPriceNextX96,
-          state.liquidity,
-          state.amountSpecifiedRemaining,
-          this.fee
-        )
+      ;[state.sqrtPriceX96, step.amountIn, step.amountOut, step.feeAmount] = SwapMath.computeSwapStep(
+        state.sqrtPriceX96,
+        (zeroForOne ? step.sqrtPriceNextX96 < sqrtPriceLimitX96 : step.sqrtPriceNextX96 > sqrtPriceLimitX96)
+          ? sqrtPriceLimitX96
+          : step.sqrtPriceNextX96,
+        state.liquidity,
+        state.amountSpecifiedRemaining,
+        this.fee
+      )
 
       if (exactInput) {
         state.amountSpecifiedRemaining = state.amountSpecifiedRemaining - (step.amountIn + step.feeAmount)
@@ -449,14 +449,14 @@ export class Pool {
     tokenB,
     fee,
     transactionOverrides,
-    factoryAddress
+    factoryAddress,
   }: {
-    _signer: ethers.Signer,
-    provider: ethers.providers.Provider,
-    tokenA: string,
-    tokenB: string,
-    fee: FeeAmount,
-    transactionOverrides?: TransactionOverrides,
+    _signer: ethers.Signer
+    provider: ethers.providers.Provider
+    tokenA: string
+    tokenB: string
+    fee: FeeAmount
+    transactionOverrides?: TransactionOverrides
     factoryAddress?: string
   }): Promise<ethers.providers.TransactionResponse> {
     let signer = _signer
@@ -492,7 +492,7 @@ export class Pool {
     }
   }
 
-  public rpcContract(params: {poolAddress?: string, signer?: ethers.Signer} | undefined): ethers.Contract {
+  public rpcContract(params: { poolAddress?: string; signer?: ethers.Signer } | undefined): ethers.Contract {
     invariant(this._provider, 'provider not initialized')
     const signer = params?.signer
     const poolAddress = params?.poolAddress
@@ -519,11 +519,11 @@ export class Pool {
    * @param blockNum The block number at which to check. Latest is assumed.
    * @returns true if the pool exists on-chain. false otherwise.
    */
-  public async rpcPoolExists(options?: {poolAddress?: string, blockNum?: number}): Promise<boolean> {
+  public async rpcPoolExists(options?: { poolAddress?: string; blockNum?: number }): Promise<boolean> {
     const poolAddress = options?.poolAddress
     const blockNum = options?.blockNum
     try {
-      await this.rpcSlot0({poolAddress, blockNum})
+      await this.rpcSlot0({ poolAddress, blockNum })
       return true
     } catch {
       return false
@@ -537,13 +537,13 @@ export class Pool {
    * @param blockNum Optional. The block number at which to fetch slot0. Latest is assumed.
    * @returns Slot0Response.
    */
-  public async rpcSlot0(options?: {poolAddress?: string, blockNum?: number}): Promise<Slot0Response> {
+  public async rpcSlot0(options?: { poolAddress?: string; blockNum?: number }): Promise<Slot0Response> {
     const poolAddress = options?.poolAddress
     const blockNum = options?.blockNum
 
     invariant(this._provider, 'provider not initialized')
 
-    const contract = this.rpcContract({poolAddress})
+    const contract = this.rpcContract({ poolAddress })
 
     const response = await contract.slot0({ blockTag: blockNum || 'latest' })
 
@@ -571,16 +571,16 @@ export class Pool {
     tickLower,
     tickUpper,
     poolAddress,
-    blockNum
+    blockNum,
   }: {
-    tickLower: number,
-    tickUpper: number,
-    poolAddress?: string,
+    tickLower: number
+    tickUpper: number
+    poolAddress?: string
     blockNum?: number
   }): Promise<SnapshotCumulativeInside> {
     invariant(this._provider, 'provider not initialized')
 
-    const contract = this.rpcContract({poolAddress})
+    const contract = this.rpcContract({ poolAddress })
 
     const response = await contract.snapshotCumulativesInside(tickLower, tickUpper, { blockTag: blockNum || 'latest' })
 
@@ -602,15 +602,15 @@ export class Pool {
   public async rpcObserve({
     secondsAgo,
     poolAddress,
-    blockNum
-   }: { 
-    secondsAgo: number[], 
-    poolAddress?: string, 
-    blockNum?: number 
+    blockNum,
+  }: {
+    secondsAgo: number[]
+    poolAddress?: string
+    blockNum?: number
   }): Promise<ObserveResponse> {
     invariant(this._provider, 'provider not initialized')
 
-    const contract = this.rpcContract({poolAddress})
+    const contract = this.rpcContract({ poolAddress })
 
     const response = await contract.observe(secondsAgo, { blockTag: blockNum || 'latest' })
 
@@ -635,16 +635,16 @@ export class Pool {
     signer,
     observationCardinalityNext,
     poolAddress,
-    transactionOverrides
+    transactionOverrides,
   }: {
-    signer: ethers.Signer,
-    observationCardinalityNext: number,
-    poolAddress?: string,
+    signer: ethers.Signer
+    observationCardinalityNext: number
+    poolAddress?: string
     transactionOverrides?: TransactionOverrides
   }): Promise<ethers.providers.TransactionResponse> {
     invariant(this._provider, 'provider not initialized')
 
-    const contract = this.rpcContract({poolAddress, signer})
+    const contract = this.rpcContract({ poolAddress, signer })
 
     const response = await contract.increaseObservationCardinalityNext(
       observationCardinalityNext,
@@ -682,20 +682,20 @@ export class Pool {
     amount0Requested,
     amount1Requested,
     poolAddress,
-    transactionOverrides
+    transactionOverrides,
   }: {
-    signer: ethers.Signer,
-    recipient: string,
-    tickLower: number,
-    tickUpper: number,
-    amount0Requested: BigInt,
-    amount1Requested: BigInt,
-    poolAddress?: string,
+    signer: ethers.Signer
+    recipient: string
+    tickLower: number
+    tickUpper: number
+    amount0Requested: BigInt
+    amount1Requested: BigInt
+    poolAddress?: string
     transactionOverrides?: TransactionOverrides
   }): Promise<ethers.providers.TransactionResponse> {
     invariant(this._provider, 'provider not initialized')
 
-    const contract = this.rpcContract({poolAddress, signer})
+    const contract = this.rpcContract({ poolAddress, signer })
 
     const response = await contract.collect(
       recipient,
@@ -727,18 +727,18 @@ export class Pool {
     tickUpper,
     amount,
     poolAddress,
-    transactionOverrides
+    transactionOverrides,
   }: {
-    signer: ethers.Signer,
-    tickLower: number,
-    tickUpper: number,
-    amount: BigInt,
-    poolAddress?: string,
+    signer: ethers.Signer
+    tickLower: number
+    tickUpper: number
+    amount: BigInt
+    poolAddress?: string
     transactionOverrides?: TransactionOverrides
   }): Promise<ethers.providers.TransactionResponse> {
     invariant(this._provider, 'provider not initialized')
 
-    const contract = this.rpcContract({poolAddress, signer})
+    const contract = this.rpcContract({ poolAddress, signer })
 
     const response = await contract.burn(
       tickLower,

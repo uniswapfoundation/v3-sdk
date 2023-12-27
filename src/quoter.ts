@@ -1,7 +1,17 @@
 import { Interface, defaultAbiCoder } from '@ethersproject/abi'
 import { BigNumber } from '@ethersproject/bignumber'
 import { Provider } from '@ethersproject/abstract-provider'
-import { BigintIsh, Currency, CurrencyAmount, TradeType, CHAIN_TO_ADDRESSES_MAP, SUPPORTED_CHAINS, SupportedChainsType, ChainId, Token } from '@uniswap/sdk-core'
+import {
+  BigintIsh,
+  Currency,
+  CurrencyAmount,
+  TradeType,
+  CHAIN_TO_ADDRESSES_MAP,
+  SUPPORTED_CHAINS,
+  SupportedChainsType,
+  ChainId,
+  Token,
+} from '@uniswap/sdk-core'
 import { encodeRouteToPath, MethodParameters, toHex } from './utils'
 import IQuoter from '@uniswap/v3-periphery/artifacts/contracts/lens/Quoter.sol/Quoter.json'
 import IQuoterV2 from '@uniswap/swap-router-contracts/artifacts/contracts/lens/QuoterV2.sol/QuoterV2.json'
@@ -32,21 +42,21 @@ interface BaseQuoteParams {
 }
 
 const quoterV2Addresses: Record<SupportedChainsType, string> = {
-  [ChainId.MAINNET]: "0x61fFE014bA17989E743c5F6cB21bF9697530B21e",
-  [ChainId.OPTIMISM]: "0x61fFE014bA17989E743c5F6cB21bF9697530B21e",
-  [ChainId.ARBITRUM_ONE]: "0x61fFE014bA17989E743c5F6cB21bF9697530B21e",
-  [ChainId.POLYGON]: "0x61fFE014bA17989E743c5F6cB21bF9697530B21e",
-  [ChainId.POLYGON_MUMBAI]: "0x61fFE014bA17989E743c5F6cB21bF9697530B21e",
-  [ChainId.GOERLI]: "0x61fFE014bA17989E743c5F6cB21bF9697530B21e",
-  [ChainId.CELO]: "0x82825d0554fA07f7FC52Ab63c961F330fdEFa8E8",
-  [ChainId.CELO_ALFAJORES]: "0x82825d0554fA07f7FC52Ab63c961F330fdEFa8E8",
-  [ChainId.BNB]: "0x78D78E420Da98ad378D7799bE8f4AF69033EB077",
-  [ChainId.OPTIMISM_GOERLI]: "0x9569CbA925c8ca2248772A9A4976A516743A246F",
-  [ChainId.ARBITRUM_GOERLI]: "0x1dd92b83591781D0C6d98d07391eea4b9a6008FA",
-  [ChainId.SEPOLIA]: "0xEd1f6473345F45b75F8179591dd5bA1888cf2FB3",
-  [ChainId.AVALANCHE]: "0xbe0F5544EC67e9B3b2D979aaA43f18Fd87E6257F",
-  [ChainId.BASE]: "0x3d4e44Eb1374240CE5F1B871ab261CD16335B76a",
-  [ChainId.BASE_GOERLI]: "0xedf539058e28E5937dAef3f69cEd0b25fbE66Ae9"
+  [ChainId.MAINNET]: '0x61fFE014bA17989E743c5F6cB21bF9697530B21e',
+  [ChainId.OPTIMISM]: '0x61fFE014bA17989E743c5F6cB21bF9697530B21e',
+  [ChainId.ARBITRUM_ONE]: '0x61fFE014bA17989E743c5F6cB21bF9697530B21e',
+  [ChainId.POLYGON]: '0x61fFE014bA17989E743c5F6cB21bF9697530B21e',
+  [ChainId.POLYGON_MUMBAI]: '0x61fFE014bA17989E743c5F6cB21bF9697530B21e',
+  [ChainId.GOERLI]: '0x61fFE014bA17989E743c5F6cB21bF9697530B21e',
+  [ChainId.CELO]: '0x82825d0554fA07f7FC52Ab63c961F330fdEFa8E8',
+  [ChainId.CELO_ALFAJORES]: '0x82825d0554fA07f7FC52Ab63c961F330fdEFa8E8',
+  [ChainId.BNB]: '0x78D78E420Da98ad378D7799bE8f4AF69033EB077',
+  [ChainId.OPTIMISM_GOERLI]: '0x9569CbA925c8ca2248772A9A4976A516743A246F',
+  [ChainId.ARBITRUM_GOERLI]: '0x1dd92b83591781D0C6d98d07391eea4b9a6008FA',
+  [ChainId.SEPOLIA]: '0xEd1f6473345F45b75F8179591dd5bA1888cf2FB3',
+  [ChainId.AVALANCHE]: '0xbe0F5544EC67e9B3b2D979aaA43f18Fd87E6257F',
+  [ChainId.BASE]: '0x3d4e44Eb1374240CE5F1B871ab261CD16335B76a',
+  [ChainId.BASE_GOERLI]: '0xedf539058e28E5937dAef3f69cEd0b25fbE66Ae9',
 }
 
 /**
@@ -68,14 +78,13 @@ export abstract class SwapQuoter {
     amountIn,
     tokenOut,
     poolFee,
-    provider
+    provider,
   }: {
     amountIn: CurrencyAmount<TInput>
     tokenOut: TOutput
     poolFee: FeeAmount
     provider: Provider
   }): Promise<CurrencyAmount<TOutput>> {
-
     invariant(amountIn.currency.chainId === tokenOut.chainId, 'Tokens need to be on same chain')
 
     const chainId = amountIn.currency.chainId
@@ -98,23 +107,20 @@ export abstract class SwapQuoter {
       tokenOut: tokenOut.address,
       fee: poolFee,
       sqrtPriceLimitX96: 0,
-      amountIn: quoteAmount
+      amountIn: quoteAmount,
     }
 
-    calldata = swapInterface.encodeFunctionData(
-      'quoteExactInputSingle',
-      [v2QuoteParams]
-    )
+    calldata = swapInterface.encodeFunctionData('quoteExactInputSingle', [v2QuoteParams])
 
     const quoteCallReturnValue = await provider.call({
       to: quoterV2Address,
-      data: calldata
+      data: calldata,
     })
 
     const decodedEthersValue: BigNumber = defaultAbiCoder.decode(['uint256'], quoteCallReturnValue)[0]
     const bigintQuoterValue = decodedEthersValue.toBigInt()
 
-    invariant(typeof bigintQuoterValue === "bigint", 'Could not decode quoter response')
+    invariant(typeof bigintQuoterValue === 'bigint', 'Could not decode quoter response')
 
     return CurrencyAmount.fromRawAmount(tokenOut, bigintQuoterValue)
   }
@@ -131,14 +137,13 @@ export abstract class SwapQuoter {
     tokenIn,
     amountOut,
     poolFee,
-    provider
+    provider,
   }: {
-    tokenIn: TInput,
-    amountOut: CurrencyAmount<TOutput>,
-    poolFee: FeeAmount,
+    tokenIn: TInput
+    amountOut: CurrencyAmount<TOutput>
+    poolFee: FeeAmount
     provider: Provider
   }): Promise<CurrencyAmount<TInput>> {
-
     invariant(amountOut.currency.chainId === tokenIn.chainId, 'Tokens need to be on same chain')
 
     const chainId = amountOut.currency.chainId
@@ -152,7 +157,6 @@ export abstract class SwapQuoter {
 
     invariant(quoterV2Address !== undefined, 'No Quoter found on this chain')
 
-
     const quoteAmount: string = toHex(amountOut.quotient)
     let calldata: string
     const swapInterface: Interface = this.V2INTERFACE
@@ -162,23 +166,20 @@ export abstract class SwapQuoter {
       tokenOut: amountOut.currency.address,
       fee: poolFee,
       sqrtPriceLimitX96: 0,
-      amountIn: quoteAmount
+      amount: quoteAmount,
     }
 
-    calldata = swapInterface.encodeFunctionData(
-      'quoteExactOutputSingle',
-      [v2QuoteParams]
-    )
+    calldata = swapInterface.encodeFunctionData('quoteExactOutputSingle', [v2QuoteParams])
 
     const quoteCallReturnValue = await provider.call({
       to: quoterV2Address,
-      data: calldata
+      data: calldata,
     })
 
     const decodedEthersValue: BigNumber = defaultAbiCoder.decode(['uint256'], quoteCallReturnValue)[0]
     const bigintQuoterValue = decodedEthersValue.toBigInt()
 
-    invariant(typeof bigintQuoterValue === "bigint", 'Could not decode quoter response')
+    invariant(typeof bigintQuoterValue === 'bigint', 'Could not decode quoter response')
 
     return CurrencyAmount.fromRawAmount(tokenIn, bigintQuoterValue)
   }
@@ -258,11 +259,11 @@ export abstract class SwapQuoter {
     route,
     amount,
     tradeType,
-    provider
+    provider,
   }: {
-    route: Route<TInput, TOutput>,
-    amount: CurrencyAmount<TInput | TOutput>,
-    tradeType: TradeType,
+    route: Route<TInput, TOutput>
+    amount: CurrencyAmount<TInput | TOutput>
+    tradeType: TradeType
     provider: Provider
   }): Promise<CurrencyAmount<TInput | TOutput>> {
     const chainId = amount.currency.chainId
@@ -276,23 +277,18 @@ export abstract class SwapQuoter {
 
     invariant(contractAddresses)
 
-    const methodParameters = this.quoteCallParameters(
-      route,
-      amount,
-      tradeType,
-      {
-        useQuoterV2: true
-      }
-    )
+    const methodParameters = this.quoteCallParameters(route, amount, tradeType, {
+      useQuoterV2: true,
+    })
     const quoteCallReturnValue = await provider.call({
       to: quoterV2Address,
-      data: methodParameters.calldata
+      data: methodParameters.calldata,
     })
 
     const decodedEthersValue: BigNumber = defaultAbiCoder.decode(['uint256'], quoteCallReturnValue)[0]
     const bigintQuoterValue = decodedEthersValue.toBigInt()
 
-    invariant(typeof bigintQuoterValue === "bigint", 'Could not decode quoter response')
+    invariant(typeof bigintQuoterValue === 'bigint', 'Could not decode quoter response')
 
     if (tradeType === TradeType.EXACT_INPUT) {
       const outputCurrency = route.output
