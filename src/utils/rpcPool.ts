@@ -2,7 +2,10 @@ import { Token } from '@uniswap/sdk-core'
 import { FeeAmount, Tick } from '../'
 import { ethers } from 'ethers'
 import poolAbi from '@uniswap/v3-core/artifacts/contracts/UniswapV3Pool.sol/UniswapV3Pool.json'
-import { Contract, Provider } from 'ethers-multicall'
+import { AbiCoder } from '@ethersproject/abi'
+import { keccak256 } from '@ethersproject/keccak256'
+import { toUtf8Bytes } from '@ethersproject/strings'
+import { BytesLike } from '@ethersproject/bytes'
 
 export interface PoolData {
   address: string
@@ -62,19 +65,17 @@ export abstract class RPCPool {
     startWord: number,
     endWord: number
   ): Promise<number[]> {
-    const multicallProvider = new Provider(provider)
-    await multicallProvider.init()
-    const poolContract = new Contract(poolAddress, poolAbi.abi)
+    const poolContract = new ethers.Contract(poolAddress, poolAbi.abi)
 
     const calls: any[] = []
     const wordPosIndices: number[] = []
 
     for (let i = startWord; i <= endWord; i++) {
       wordPosIndices.push(i)
-      calls.push(poolContract.tickBitmap(i))
+      calls.push(this.makeMulticallFunction(poolContract, 'tickBitmap')(i))
     }
 
-    const results: bigint[] = (await multicallProvider.all(calls)).map((ethersResponse: any) => {
+    const results: bigint[] = (await this.multicall(calls, provider)).map((ethersResponse: any) => {
       return BigInt(ethersResponse.toString())
     })
 
@@ -104,17 +105,15 @@ export abstract class RPCPool {
     poolAddress: string,
     tickIndices: number[]
   ): Promise<Tick[]> {
-    const multicallProvider = new Provider(provider)
-    await multicallProvider.init()
-    const poolContract = new Contract(poolAddress, poolAbi.abi)
+    const poolContract = new ethers.Contract(poolAddress, poolAbi.abi)
 
     const calls: any[] = []
 
     for (const index of tickIndices) {
-      calls.push(poolContract.ticks(index))
+      calls.push(this.makeMulticallFunction(poolContract, 'ticks')(index))
     }
 
-    const results = await multicallProvider.all(calls)
+    const results = await this.multicall(calls, provider)
     const allTicks: Tick[] = []
 
     for (let i = 0; i < tickIndices.length; i++) {
@@ -129,4 +128,109 @@ export abstract class RPCPool {
     }
     return allTicks
   }
+
+  // Helpers for multicall
+
+  private static makeMulticallFunction(contract: ethers.Contract, name: string): (...params: any[]) => ContractCall {
+    return (...params: any[]) => {
+      const { address } = contract
+      const { inputs } =
+        contract.interface.functions[name] || Object.values(contract.interface.functions).find((f) => f.name === name)
+      const { outputs } =
+        contract.interface.functions[name] || Object.values(contract.interface.functions).find((f) => f.name === name)
+      return {
+        contract: {
+          address: address,
+        },
+        name: name,
+        inputs: inputs || [],
+        outputs: outputs || [],
+        params: params,
+      }
+    }
+  }
+
+  private static multicallGetFunctionSignature(name: string, inputs: ethers.utils.ParamType[]): string {
+    const types = []
+    for (const input of inputs) {
+      if (input.type === 'tuple') {
+        const tupleString = this.multicallGetFunctionSignature('', input.components)
+        types.push(tupleString)
+        continue
+      }
+      if (input.type === 'tuple[]') {
+        const tupleString = this.multicallGetFunctionSignature('', input.components)
+        const arrayString = `${tupleString}[]`
+        types.push(arrayString)
+        continue
+      }
+      types.push(input.type)
+    }
+    const typeString = types.join(',')
+    const functionSignature = `${name}(${typeString})`
+    return functionSignature
+  }
+
+  private static makeMulticallCallData(name: string, inputs: ethers.utils.ParamType[], params: any[]) {
+    const functionSignature = this.multicallGetFunctionSignature(name, inputs)
+    const functionHash = keccak256(toUtf8Bytes(functionSignature))
+    const functionData = functionHash.substring(2, 10)
+    const abiCoder = new AbiCoder()
+    const argumentString = abiCoder.encode(inputs, params)
+    const argumentData = argumentString.substring(2)
+    const inputData = `0x${functionData}${argumentData}`
+    return inputData
+  }
+
+  private static fromMulticallResult(outputs: ethers.utils.ParamType[], data: BytesLike) {
+    const abiCoder = new AbiCoder()
+    const params = abiCoder.decode(outputs, data)
+    return params
+  }
+
+  private static async multicall<T extends any[] = any[]>(
+    calls: ContractCall[],
+    provider: ethers.providers.Provider
+  ): Promise<T> {
+    // Multicall3 address deployed on 100+ chains. Code cannot be changed and
+    // nothing else can be deployed on this address on any chain.
+    // So if a chain ever doesn't have the deployment yet, the function will
+    // throw. Which is what we want.
+    // https://github.com/mds1/multicall
+    const multicallAddress = '0xcA11bde05977b3631167028862bE2a173976CA11'
+    const multicallAbi = [
+      'function aggregate3(tuple(address target, bool allowFailure, bytes callData)[] calls) payable returns (tuple(bool success, bytes returnData)[] returnData)',
+    ]
+
+    const multicall = new ethers.Contract(multicallAddress, multicallAbi, provider)
+    const callRequests = calls.map((call) => {
+      const callData = this.makeMulticallCallData(call.name, call.inputs, call.params)
+      return {
+        target: call.contract.address,
+        allowFailure: false,
+        callData: callData,
+      }
+    })
+    const response = await multicall.callStatic.aggregate3(callRequests)
+    const callCount = calls.length
+    const callResult = [] as unknown as T
+    for (let i = 0; i < callCount; i++) {
+      const outputs = calls[i].outputs
+      const returnData = response[i].returnData
+      const params = this.fromMulticallResult(outputs, returnData)
+      const result = outputs.length === 1 ? params[0] : params
+      callResult.push(result)
+    }
+    return callResult
+  }
+}
+
+interface ContractCall {
+  contract: {
+    address: string
+  }
+  name: string
+  inputs: ethers.utils.ParamType[]
+  outputs: ethers.utils.ParamType[]
+  params: any[]
 }
