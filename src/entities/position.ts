@@ -10,24 +10,24 @@ import {
 } from '@uniswap/sdk-core'
 import JSBI from 'jsbi'
 import invariant from 'tiny-invariant'
-import { ZERO } from '../internalConstants'
-import { maxLiquidityForAmounts } from '../utils/maxLiquidityForAmounts'
-import { tickToPrice } from '../utils/priceTickConversions'
-import { SqrtPriceMath } from '../utils/sqrtPriceMath'
-import { TickMath } from '../utils/tickMath'
-import { encodeSqrtRatioX96BigInt } from '../utils/encodeSqrtRatioX96'
-import { Pool, TransactionOverrides } from './pool'
+import { ZERO } from '../internalConstants.js'
+import { maxLiquidityForAmounts } from '../utils/maxLiquidityForAmounts.js'
+import { tickToPrice } from '../utils/priceTickConversions.js'
+import { SqrtPriceMath } from '../utils/sqrtPriceMath.js'
+import { TickMath } from '../utils/tickMath.js'
+import { encodeSqrtRatioX96BigInt } from '../utils/encodeSqrtRatioX96.js'
+import { Pool, TransactionOverrides } from './pool.js'
 import { ethers } from 'ethers'
 import INonfungiblePositionManager from '@uniswap/v3-periphery/artifacts/contracts/NonfungiblePositionManager.sol/NonfungiblePositionManager.json'
-import { ERC20_ABI } from '../constants'
-import { bigIntFromBigintIsh } from '../utils/bigintIsh'
+import { ERC20_ABI } from '../constants.js'
+import { bigIntFromBigintIsh } from '../utils/bigintIsh.js'
 import {
   CollectOptions,
   IncreaseOptions,
   MintOptions,
   NonfungiblePositionManager,
   RemoveLiquidityOptions,
-} from '../nonfungiblePositionManager'
+} from '../nonfungiblePositionManager.js'
 
 interface PositionConstructorArgs {
   pool: Pool

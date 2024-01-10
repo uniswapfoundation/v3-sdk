@@ -1,6 +1,6 @@
 import JSBI from 'jsbi'
-import { subIn256 } from './tickLibrary'
-import { bigIntFromBigintIsh } from './bigintIsh'
+import { subIn256 } from './tickLibrary.js'
+import { bigIntFromBigintIsh } from './bigintIsh.js'
 
 const Q128 = 2n ** 128n
 

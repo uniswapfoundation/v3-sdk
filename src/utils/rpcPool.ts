@@ -1,5 +1,5 @@
 import { Token } from '@uniswap/sdk-core'
-import { FeeAmount, Tick } from '../'
+import { FeeAmount, Tick } from '../index.js'
 import { ethers } from 'ethers'
 import poolAbi from '@uniswap/v3-core/artifacts/contracts/UniswapV3Pool.sol/UniswapV3Pool.json'
 import { AbiCoder } from '@ethersproject/abi'

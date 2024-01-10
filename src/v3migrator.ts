@@ -1,6 +1,6 @@
 import { Percent, validateAndParseAddress, SUPPORTED_CHAINS, CHAIN_TO_ADDRESSES_MAP } from '@uniswap/sdk-core'
-import { Pool } from './entities/pool'
-import { MethodParameters, toHex } from './utils'
+import { Pool } from './entities/pool.js'
+import { MethodParameters, toHex } from './utils/index.js'
 import { Provider } from '@ethersproject/abstract-provider'
 import { Signer } from '@ethersproject/abstract-signer'
 import { TransactionResponse } from '@ethersproject/providers'

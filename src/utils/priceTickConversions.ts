@@ -1,7 +1,7 @@
 import { Price, Token } from '@uniswap/sdk-core'
-import { Q192 } from '../internalConstants'
-import { encodeSqrtRatioX96BigInt } from './encodeSqrtRatioX96'
-import { TickMath } from './tickMath'
+import { Q192 } from '../internalConstants.js'
+import { encodeSqrtRatioX96BigInt } from './encodeSqrtRatioX96.js'
+import { TickMath } from './tickMath.js'
 
 /**
  * Returns a price object corresponding to the input tick and the base/quote token

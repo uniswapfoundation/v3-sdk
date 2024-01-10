@@ -1,9 +1,9 @@
 import { MaxUint256BigInt } from '@uniswap/sdk-core'
 import JSBI from 'jsbi'
 import invariant from 'tiny-invariant'
-import { Q96_BIGINT } from '../internalConstants'
-import { FullMath } from './fullMath'
-import { bigIntFromBigintIsh } from './bigintIsh'
+import { Q96_BIGINT } from '../internalConstants.js'
+import { FullMath } from './fullMath.js'
+import { bigIntFromBigintIsh } from './bigintIsh.js'
 
 const MaxUint160 = 2n ** 160n - 1n
 

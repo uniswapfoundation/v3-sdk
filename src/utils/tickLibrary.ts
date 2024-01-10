@@ -1,5 +1,5 @@
 import JSBI from 'jsbi'
-import { bigIntFromBigintIsh } from './bigintIsh'
+import { bigIntFromBigintIsh } from './bigintIsh.js'
 
 interface FeeGrowthOutside<T extends bigint | JSBI> {
   feeGrowthOutside0X128: T

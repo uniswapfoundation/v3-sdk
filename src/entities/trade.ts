@@ -1,8 +1,8 @@
 import { Currency, Fraction, Percent, Price, sortedInsert, CurrencyAmount, TradeType, Token } from '@uniswap/sdk-core'
 import invariant from 'tiny-invariant'
-import { ONE, ZERO } from '../internalConstants'
-import { Pool } from './pool'
-import { Route } from './route'
+import { ONE, ZERO } from '../internalConstants.js'
+import { Pool } from './pool.js'
+import { Route } from './route.js'
 
 /**
  * Trades comparator, an extension of the input output comparator that also considers other dimensions of the trade in ranking them

@@ -2,7 +2,7 @@ import { Signer } from '@ethersproject/abstract-signer'
 import { Provider, TransactionReceipt, TransactionResponse } from '@ethersproject/abstract-provider'
 import { Contract } from '@ethersproject/contracts'
 import { BigintIsh } from '@uniswap/sdk-core'
-import { ERC20_ABI } from '../constants'
+import { ERC20_ABI } from '../constants.js'
 import { BigNumber } from 'ethers'
 
 /**

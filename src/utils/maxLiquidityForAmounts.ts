@@ -1,7 +1,7 @@
 import { BigintIsh } from '@uniswap/sdk-core'
 import JSBI from 'jsbi'
-import { Q96_BIGINT } from '../internalConstants'
-import { bigIntFromBigintIsh } from './bigintIsh'
+import { Q96_BIGINT } from '../internalConstants.js'
+import { bigIntFromBigintIsh } from './bigintIsh.js'
 
 /**
  * Returns an imprecise maximum amount of liquidity received for a given amount of token 0.

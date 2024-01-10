@@ -1,7 +1,7 @@
 import { pack } from '@ethersproject/solidity'
 import { Currency, Token } from '@uniswap/sdk-core'
-import { Pool } from '../entities/pool'
-import { Route } from '../entities/route'
+import { Pool } from '../entities/pool.js'
+import { Route } from '../entities/route.js'
 
 /**
  * Converts a route to a hex encoded path

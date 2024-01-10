@@ -1,9 +1,9 @@
 import { BigintIsh, Token, validateAndParseAddress } from '@uniswap/sdk-core'
-import { MethodParameters, toHex } from './utils/calldata'
+import { MethodParameters, toHex } from './utils/calldata.js'
 import { defaultAbiCoder, Interface } from '@ethersproject/abi'
 import IUniswapV3Staker from '@uniswap/v3-staker/artifacts/contracts/UniswapV3Staker.sol/UniswapV3Staker.json'
-import { Pool } from './entities'
-import { Multicall } from './multicall'
+import { Pool } from './entities/index.js'
+import { Multicall } from './multicall.js'
 
 export type FullWithdrawOptions = ClaimOptions & WithdrawOptions
 /**

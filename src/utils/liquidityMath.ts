@@ -1,5 +1,5 @@
 import JSBI from 'jsbi'
-import { bigIntFromBigintIsh } from './bigintIsh'
+import { bigIntFromBigintIsh } from './bigintIsh.js'
 
 export abstract class LiquidityMath {
   /**

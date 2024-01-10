@@ -1,7 +1,7 @@
 import { MaxUint256BigInt } from '@uniswap/sdk-core'
 import JSBI from 'jsbi'
 import invariant from 'tiny-invariant'
-import { bigIntFromBigintIsh } from './bigintIsh'
+import { bigIntFromBigintIsh } from './bigintIsh.js'
 
 const POWERS_OF_2 = [128, 64, 32, 16, 8, 4, 2, 1].map((pow: number): [number, bigint] => [pow, 2n ** BigInt(pow)])
 

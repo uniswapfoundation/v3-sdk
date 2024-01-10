@@ -9,17 +9,17 @@ import {
   NONFUNGIBLE_POSITION_MANAGER_ADDRESSES,
 } from '@uniswap/sdk-core'
 import invariant from 'tiny-invariant'
-import { Position } from './entities/position'
-import { MethodParameters, toHex } from './utils/calldata'
+import { Position } from './entities/position.js'
+import { MethodParameters, toHex } from './utils/calldata.js'
 import { Interface } from '@ethersproject/abi'
 import INonfungiblePositionManager from '@uniswap/v3-periphery/artifacts/contracts/NonfungiblePositionManager.sol/NonfungiblePositionManager.json'
-import { PermitOptions, SelfPermit } from './selfPermit'
-import { ADDRESS_ZERO } from './constants'
-import { Pool, TransactionOverrides } from './entities'
-import { Multicall } from './multicall'
-import { Payments } from './payments'
+import { PermitOptions, SelfPermit } from './selfPermit.js'
+import { ADDRESS_ZERO } from './constants.js'
+import { Pool, TransactionOverrides } from './entities/index.js'
+import { Multicall } from './multicall.js'
+import { Payments } from './payments.js'
 import { ethers } from 'ethers'
-import { bigIntFromBigintIsh } from './utils/bigintIsh'
+import { bigIntFromBigintIsh } from './utils/bigintIsh.js'
 
 const MaxUint128 = `0x${(2n ** 128n - 1n).toString(16)}`
 

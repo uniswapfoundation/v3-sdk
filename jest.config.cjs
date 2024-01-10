@@ -26,6 +26,8 @@ module.exports = {
     'src/(.*)': '<rootDir>/src/$1',
     // for esm modules in ts-jest
     '^(\\.{1,2}/.*)\\.js$': '$1',
+    // for .js imports
+    '(.+)\\.js$': ['$1.js', '$1'],
   },
   extensionsToTreatAsEsm: ['.ts'],
 }

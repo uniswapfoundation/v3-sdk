@@ -1,8 +1,8 @@
 import JSBI from 'jsbi'
 import invariant from 'tiny-invariant'
 import { BigintIsh } from '@uniswap/sdk-core'
-import { TickMath } from '../utils'
-import { bigIntFromBigintIsh } from '../utils/bigintIsh'
+import { TickMath } from '../utils/index.js'
+import { bigIntFromBigintIsh } from '../utils/bigintIsh.js'
 
 export interface TickConstructorArgs {
   index: number
