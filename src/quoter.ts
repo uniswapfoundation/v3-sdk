@@ -12,12 +12,12 @@ import {
   ChainId,
   Token,
 } from '@uniswap/sdk-core'
-import { encodeRouteToPath, MethodParameters, toHex } from './utils'
+import { encodeRouteToPath, MethodParameters, toHex } from './utils/index.js'
 import IQuoter from '@uniswap/v3-periphery/artifacts/contracts/lens/Quoter.sol/Quoter.json'
 import IQuoterV2 from '@uniswap/swap-router-contracts/artifacts/contracts/lens/QuoterV2.sol/QuoterV2.json'
-import { Route } from './entities'
+import { Route } from './entities/index.js'
 import invariant from 'tiny-invariant'
-import { FeeAmount } from './constants'
+import { FeeAmount } from './constants.js'
 
 /**
  * Optional arguments to send to the quoter.

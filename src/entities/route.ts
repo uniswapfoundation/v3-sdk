@@ -1,7 +1,7 @@
 import invariant from 'tiny-invariant'
 
 import { Currency, Price, Token } from '@uniswap/sdk-core'
-import { Pool } from './pool'
+import { Pool } from './pool.js'
 
 /**
  * Represents a list of pools through which a swap can occur

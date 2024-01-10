@@ -1,7 +1,7 @@
 import { Currency } from '@uniswap/sdk-core'
-import { Route } from '../entities/route'
+import { Route } from '../entities/route.js'
 import { Provider } from '@ethersproject/abstract-provider'
-import { NoTickDataProvider } from '../entities'
+import { NoTickDataProvider } from '../entities/index.js'
 import invariant from 'tiny-invariant'
 
 export async function fetchTickDataForAllPoolsInRoute<TInput extends Currency, TOutput extends Currency>(

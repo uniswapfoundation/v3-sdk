@@ -1,8 +1,8 @@
 import { MaxUint256BigInt } from '@uniswap/sdk-core'
 import JSBI from 'jsbi'
 import invariant from 'tiny-invariant'
-import { mostSignificantBit } from './mostSignificantBit'
-import { bigIntFromBigintIsh } from './bigintIsh'
+import { mostSignificantBit } from './mostSignificantBit.js'
+import { bigIntFromBigintIsh } from './bigintIsh.js'
 
 function mulShift(val: bigint, mulBy: bigint): bigint {
   return (val * mulBy) >> 128n

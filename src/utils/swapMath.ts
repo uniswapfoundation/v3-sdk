@@ -1,8 +1,8 @@
 import JSBI from 'jsbi'
-import { FeeAmount } from '../constants'
-import { FullMath } from './fullMath'
-import { SqrtPriceMath } from './sqrtPriceMath'
-import { bigIntFromBigintIsh } from './bigintIsh'
+import { FeeAmount } from '../constants.js'
+import { FullMath } from './fullMath.js'
+import { SqrtPriceMath } from './sqrtPriceMath.js'
+import { bigIntFromBigintIsh } from './bigintIsh.js'
 
 const MAX_FEE = 10n ** 6n
 

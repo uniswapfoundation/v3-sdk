@@ -1,5 +1,5 @@
 import { BigintIsh } from '@uniswap/sdk-core'
-import { bigIntFromBigintIsh } from './bigintIsh'
+import { bigIntFromBigintIsh } from './bigintIsh.js'
 
 /**
  * Generated method parameters for executing a call.
